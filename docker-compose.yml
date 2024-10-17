@@ -1,5 +1,6 @@
 services:
   backend:
+    image: veloce-backend
     build:
       context: ./api
       dockerfile: Dockerfile
@@ -14,6 +15,7 @@ services:
       - app-network
 
   frontend:
+    image: veloce-frontend
     build:
       context: ./app
       dockerfile: Dockerfile
