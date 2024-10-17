@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff; /* Tailwind's white */
+  --foreground: #171717; /* Tailwind's gray-900 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1f2937; /* Tailwind's gray-800 */
+    --foreground: #d1d5db; /* Tailwind's gray-300 */
+  }
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--foreground);
+}
+
+p {
+  color: var(--foreground);
+  margin-bottom: 1rem; /* Tailwind's mb-4 */
+}
+
+:focus {
+  outline: 2px solid var(--foreground);
+}
+
+button, input, select {
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: rgba(0, 0, 0, 0.1); /* Custom hover effect */
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-gradient {
+    background: linear-gradient(90deg, var(--foreground), var(--background));
+  }
+}

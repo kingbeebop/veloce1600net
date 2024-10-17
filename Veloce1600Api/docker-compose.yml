@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  veloce1600api:
+    build:
+      context: ./Veloce1600Api
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=YourConnectionStringHere
+      - Jwt__Issuer=YourIssuerHere
+      - Jwt__Audience=YourAudienceHere
+      - Jwt__Key=YourJwtKeyHere
+    networks:
+      - veloce_network
+
+networks:
+  veloce_network:

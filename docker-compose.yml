@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  veloce1600api:
+    build:
+      context: ./Veloce1600Api
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"  # Expose the backend API on port 80
+
+  frontend:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # Expose the frontend on port 3000
+    environment:
+      - NODE_ENV=production
