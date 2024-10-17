@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Veloce1600Api.Migrations
+namespace api.Migrations
 {
     /// <inheritdoc />
     public partial class Initial : Migration

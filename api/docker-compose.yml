@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  veloce1600api:
+  api:
     build:
-      context: ./Veloce1600Api
+      context: ./api
       dockerfile: Dockerfile
     ports:
       - "80:80"

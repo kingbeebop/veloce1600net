@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Http;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 
-namespace Veloce1600Api.Controllers
+namespace api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

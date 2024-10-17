@@ -3,7 +3,7 @@ version: '3.8'
 services:
   veloce1600api:
     build:
-      context: ./Veloce1600Api
+      context: ./api
       dockerfile: Dockerfile
     ports:
       - "80:80"  # Expose the backend API on port 80
