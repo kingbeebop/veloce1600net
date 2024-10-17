@@ -8,13 +8,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using DotNetEnv;
+using System.Threading.Tasks;
 
 public class Startup
 {
     public Startup(IConfiguration configuration)
     {
-        Env.Load(); // Load environment variables here
         Configuration = configuration;
     }
 
@@ -22,13 +21,30 @@ public class Startup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        // Load environment variables if needed
+        DotNetEnv.Env.Load(); 
+
+        // CORS policy configuration
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAllOrigins", builder =>
+            {
+                builder.AllowAnyOrigin()
+                       .AllowAnyMethod()
+                       .AllowAnyHeader();
+            });
+        });
+
+        // Database context setup
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
 
+        // Identity setup
         services.AddIdentity<User, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
+        // Authentication configuration
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -51,33 +67,31 @@ public class Startup
             {
                 OnAuthenticationFailed = context =>
                 {
-                    Console.WriteLine("Authentication failed: " + context.Exception.Message);
+                    Console.WriteLine($"Authentication failed: {context.Exception.Message}");
                     return Task.CompletedTask;
                 }
             };
         });
 
-        services.AddCors(options =>
-        {
-            options.AddPolicy("AllowAllOrigins", builder => builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
-        });
-
+        // Swagger configuration
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Car API", Version = "v1" });
         });
 
-        services.AddControllers().AddNewtonsoftJson();
+        // Controllers with JSON serialization
+        services.AddControllers()
+                .AddNewtonsoftJson();
 
-        // Register TokenRepository as a singleton
+        // Dependency Injection for services
         services.AddSingleton<ITokenRepository, TokenRepository>();
-        
-        // Register FileUploadService
         services.AddScoped<FileUploadService>();
+        services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
+        // Error handling middleware
         if (env.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
@@ -88,14 +102,17 @@ public class Startup
             app.UseHsts();
         }
 
+        // Middleware pipeline
         app.UseHttpsRedirection();
         app.UseRouting();
+        
         app.UseCors("AllowAllOrigins");
         app.UseAuthentication();
         app.UseAuthorization();
 
         app.UseStaticFiles();
 
+        // Swagger UI
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
@@ -107,5 +124,16 @@ public class Startup
         {
             endpoints.MapControllers(); 
         });
+
+        // // Apply migrations automatically and seed data
+        // using (var scope = app.ApplicationServices.CreateScope())
+        // {
+        //     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        //     dbContext.Database.Migrate(); // Apply any pending migrations
+            
+        //     // Seed data after migrations
+        //     var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+        //     dbInitializer.SeedDataAsync().GetAwaiter().GetResult();
+        // }
     }
 }

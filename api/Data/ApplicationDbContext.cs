@@ -27,10 +27,10 @@ public class ApplicationDbContext : IdentityDbContext<User>
     private static string GetConnectionString()
     {
         // Load environment variables
-        var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+        var host = Environment.GetEnvironmentVariable("DB_HOST") ?? "postgres";
         var port = Environment.GetEnvironmentVariable("DB_PORT") ?? "5432";
         var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "velocenetdb";
-        var user = Environment.GetEnvironmentVariable("DB_USER") ?? "velocenetuser";
+        var user = Environment.GetEnvironmentVariable("DB_USER") ?? "velocenetdb";
         var password = Environment.GetEnvironmentVariable("DB_PASSWORD") ?? "negator77";
 
         // Create connection string

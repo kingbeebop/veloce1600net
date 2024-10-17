@@ -4,10 +4,11 @@ import { CarApiResponse } from '../types/apiResponse';
 import { Owner } from '../types/owner';
 import { Sale } from '../types/sale';
 import { User } from '../types/user'; // Ensure you have a type for user info
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5018";
 
 // Base axios instance for unprotected requests
 const api = axios.create({
-  baseURL: 'http://localhost:5018/api', // Adjust as needed
+  baseURL: `${API_BASE_URL}/api`, // Adjust as needed
 });
 
 // Protected API request wrapper
@@ -117,7 +118,7 @@ export const fetchProtectedData = async (): Promise<any> => {
 
 // Fetch cars with pagination
 export const fetchCars = async (page: number, pageSize: number): Promise<CarApiResponse> => {
-  const response = await api.get<CarApiResponse>(`/cars?page=${page}&page_size=${pageSize}`);
+  const response = await api.get<CarApiResponse>(`/cars?page=${page}&pageSize=${pageSize}`);
   return response.data;
 };
 

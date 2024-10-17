@@ -1,18 +1,51 @@
-version: '3.8'
-
 services:
-  veloce1600api:
+  backend:
     build:
       context: ./api
       dockerfile: Dockerfile
     ports:
-      - "80:80"  # Expose the backend API on port 80
+      - "5018:5018"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=velocenetdb;Username=velocenetdb;Password=negator77;
+    depends_on:
+      - postgres
+    networks:
+      - app-network
 
   frontend:
     build:
       context: ./app
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"  # Expose the frontend on port 3000
+      - "3000:3000"
     environment:
       - NODE_ENV=production
+      - REACT_APP_API_URL=http://localhost:5018
+    networks:
+      - app-network
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      - POSTGRES_DB=velocenetdb
+      - POSTGRES_USER=velocenetdb
+      - POSTGRES_PASSWORD=negator77
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./velocenetdb.sql:/docker-entrypoint-initdb.d/velocenetdb.sql  # Mount your SQL dump
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "velocenetdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
