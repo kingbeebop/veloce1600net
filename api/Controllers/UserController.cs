@@ -45,6 +45,48 @@ public class UserController : ControllerBase
 
         return Ok(userResponse);
     }
+
+    [HttpPost("register")]
+    public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterRequest request)
+    {
+        // Validate the request
+        if (request == null || string.IsNullOrEmpty(request.Username) || 
+            string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Email))
+        {
+            return BadRequest(new { message = "Invalid registration details." });
+        }
+
+        var user = new User
+        {
+            UserName = request.Username,
+            Email = request.Email,
+            Avatar = null // Default avatar to null
+        };
+
+        var result = await _userManager.CreateAsync(user, request.Password);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(new { message = "User registration failed.", errors = result.Errors });
+        }
+
+        // Construct and return the user response
+        var userResponse = new UserResponse
+        {
+            Username = user.UserName,
+            Email = user.Email,
+            Avatar = null // Default avatar to null
+        };
+
+        return CreatedAtAction(nameof(GetUser), new { id = user.Id }, userResponse);
+    }
+}
+
+public class RegisterRequest
+{
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public string Email { get; set; }
 }
 
 public class UserResponse
