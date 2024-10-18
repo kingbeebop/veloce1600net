@@ -61,4 +61,4 @@ networks:
 
 volumes:
   postgres_data:
-  frontend_build:  # Define the shared volume for frontend build artifacts
+  frontend_build:
