@@ -4,14 +4,14 @@ FROM node:18 AS build
 # Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy package.json and package-lock.json from the app directory
+COPY app/package*.json ./
 
 # Install dependencies
 RUN npm install --production
 
 # Copy the rest of the application code
-COPY . .
+COPY app/ ./
 
 # Build the Next.js application
 RUN npm run build
@@ -27,3 +27,6 @@ COPY --from=build /app/.next /frontend_build/.next
 
 # Set the volume to be used by Nginx
 VOLUME /frontend_build
+
+# You can also expose the port if needed
+EXPOSE 3000
