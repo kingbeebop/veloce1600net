@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN npm install --production
 
 # Copy the rest of the application code
 COPY . .
@@ -16,5 +16,5 @@ COPY . .
 # Build the Next.js application
 RUN npm run build
 
-# Start the application
+# Start the application (if you plan to run it in development mode for testing)
 CMD ["npm", "start"]
