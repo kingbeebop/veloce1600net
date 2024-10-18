@@ -16,8 +16,8 @@ COPY . .
 # Build the Next.js application
 RUN npm run build
 
-# Use a lightweight image to hold built files
-FROM alpine:latest as export
+# Use Node.js as the final image
+FROM node:18 AS export
 
 # Create a directory for the shared volume
 RUN mkdir -p /frontend_build
