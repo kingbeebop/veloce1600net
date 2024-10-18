@@ -19,6 +19,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
+    ports:
+      "3000:3000"
     volumes:
       - frontend_build:/usr/share/nginx/html  # Use a volume to share the frontend build output
     networks:
