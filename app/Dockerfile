@@ -16,17 +16,9 @@ COPY . .
 # Build the Next.js application
 RUN npm run build
 
-# Use Nginx to serve the application
-FROM nginx:alpine
+# Copy built files to the final image
+# We won't use Nginx here, so we'll just keep the files for Nginx to serve later
+COPY --from=build /app/.next /app/.next
+COPY --from=build /app/public /app/public
 
-# Remove the default Nginx configuration
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy built files from the build stage
-COPY --from=build /app/.next /usr/share/nginx/html/.next
-
-# Expose the port on which Nginx will run
-EXPOSE 80
-
-# Start Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# The final image will be built by the main Nginx service
