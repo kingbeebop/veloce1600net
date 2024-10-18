@@ -4,7 +4,7 @@ import { CarApiResponse } from '../types/apiResponse';
 import { Owner } from '../types/owner';
 import { Sale } from '../types/sale';
 import { User } from '../types/user'; // Ensure you have a type for user info
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5018";
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://167.172.251.135";
 
 // Base axios instance for unprotected requests
 const api = axios.create({

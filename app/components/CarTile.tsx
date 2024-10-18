@@ -19,7 +19,7 @@ const CarTile: React.FC<CarTileProps> = ({ car, setLoading }) => {
     router.push(`/cars/${car.id}`);
   };
 
-  const avatarSrc = car.imagePath ? ('http://localhost:5018' + car.imagePath) : null; // Use car.imagePath if it's not null
+  const avatarSrc = car.imagePath ? ('http://167.172.251.135' + car.imagePath) : null; // Use car.imagePath if it's not null
   const defaultAvatar = "🚗"; // Car emoji for default avatar
 
   return (
