@@ -49,6 +49,7 @@ services:
       image: nginx:latest
       volumes:
         - ./nginx.conf:/etc/nginx/nginx.conf
+        - ./app/.next/static:/app/.next/static
       ports:
         - "80:80"
       networks:
