@@ -1,5 +1,5 @@
 # Use the official Node.js image with a supported version
-FROM node:18 AS build
+FROM node:20 AS build
 
 # Set the working directory
 WORKDIR /
@@ -17,7 +17,7 @@ COPY ./ ./
 RUN npm run build
 
 # Use Node.js as the final image
-FROM node:18 AS export
+FROM node:20 AS export
 
 # Create a directory for the shared volume
 RUN mkdir -p /frontend_build
