@@ -24,7 +24,6 @@ RUN rm /etc/nginx/conf.d/default.conf
 
 # Copy built files from the build stage
 COPY --from=build /app/.next /usr/share/nginx/html/.next
-COPY --from=build /app/public /usr/share/nginx/html/public
 
 # Expose the port on which Nginx will run
 EXPOSE 80
