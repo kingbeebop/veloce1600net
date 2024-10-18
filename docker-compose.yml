@@ -1,5 +1,3 @@
-version: '3.8'  # Add this line if it's not already present
-
 services:
   backend:
     image: veloce-backend
