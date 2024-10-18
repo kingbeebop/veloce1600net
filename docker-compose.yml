@@ -46,14 +46,15 @@ services:
       - app-network
 
   nginx:
-      image: nginx:latest
-      volumes:
-        - ./nginx.conf:/etc/nginx/nginx.conf
-        - ./app/.next/static:/app/.next/static
-      ports:
-        - "80:80"
-      networks:
-        - app-network
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./app/.next/static:/usr/share/nginx/html/.next/static  # Ensure this path matches
+    ports:
+      - "80:80"
+    networks:
+      - app-network
+
 
 networks:
   app-network:
