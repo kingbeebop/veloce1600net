@@ -1,32 +1,35 @@
 # Use the official Node.js image with a supported version
 FROM node:20 AS build
 
-# Set the working directory inside the container to /app
+# Set the working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json into the working directory
+# Copy package.json and package-lock.json from the app directory
 COPY package*.json ./
 
-# Install production dependencies
+# Install dependencies
 RUN npm install --production
 
-# Copy the rest of the application code into the working directory
+# Copy the rest of the application code
 COPY ./ ./
 
 # Build the Next.js application
 RUN npm run build
 
-# Use Node.js as the final image for exporting the build
+# Use Node.js as the final image
 FROM node:20 AS export
 
-# Create a directory for the shared volume that will hold the build artifacts
-RUN mkdir -p /frontend_build
+# Set the working directory again
+WORKDIR /app
 
-# Copy the .next build files from the build stage
-COPY --from=build /app/.next /frontend_build/.next
+# Copy built files from the build stage
+COPY --from=build /app/.next /app/.next
 
-# Set the volume to be used by Nginx or other services
-VOLUME /frontend_build
+# Copy package.json from the build stage to the export stage
+COPY --from=build /app/package*.json ./
 
-# Expose the port if needed (for example, if you want to run the app directly from the container)
-EXPOSE 3000
+# Install production dependencies again (if needed)
+RUN npm install --production
+
+# Start the Next.js application
+CMD ["npm", "start"]
