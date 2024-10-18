@@ -19,6 +19,5 @@ RUN npm run build
 # Copy built files to the final image
 # We won't use Nginx here, so we'll just keep the files for Nginx to serve later
 COPY --from=build /app/.next /app/.next
-COPY --from=build /app/public /app/public
 
 # The final image will be built by the main Nginx service
