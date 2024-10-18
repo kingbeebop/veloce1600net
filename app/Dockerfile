@@ -16,13 +16,17 @@ COPY . .
 # Build the Next.js application
 RUN npm run build
 
-# Use a lightweight Nginx image to serve the application files
-FROM nginx:alpine
+# Use a lightweight image to hold built files
+FROM alpine:latest as export
 
-# Remove the default Nginx configuration
-RUN rm /etc/nginx/conf.d/default.conf
+# Create a directory for the shared volume
+RUN mkdir -p /frontend_build
 
 # Copy built files from the build stage
-COPY --from=build /app/.next /usr/share/nginx/html/.next
+COPY --from=build /app/.next /frontend_build/.next
 
-EXPOSE 3000
+# Optionally, copy other necessary files, like next.config.js, if applicable
+COPY --from=build /app/next.config.js /frontend_build/next.config.js
+
+# Set the volume to be used by Nginx
+VOLUME /frontend_build

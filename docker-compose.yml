@@ -19,10 +19,8 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    ports:
-      - "3000:3000"  # Keep the frontend exposed for local development
     volumes:
-      - frontend_build:/usr/share/nginx/html  # Use a volume to share the frontend build output
+      - frontend_build:/frontend_build  # Use a volume to share the frontend build output
     networks:
       - app-network
 
