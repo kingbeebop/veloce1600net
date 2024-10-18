@@ -19,10 +19,21 @@ services:
     build:
       context: ./app
       dockerfile: Dockerfile
-    # No ports needed; Nginx will serve this
-    environment:
-      - NODE_ENV=production
-      - REACT_APP_API_URL=http://backend:5018  # Use service name instead of localhost
+    volumes:
+      - frontend_build:/usr/share/nginx/html  # Use a volume to share the frontend build output
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Use your custom Nginx configuration file
+      - frontend_build:/usr/share/nginx/html  # Mount the shared volume for frontend output
+    ports:
+      - "80:80"  # Expose Nginx on port 80
+    depends_on:
+      - frontend  # Ensure frontend is built before Nginx starts
+      - backend   # Ensure backend is ready
     networks:
       - app-network
 
@@ -44,23 +55,10 @@ services:
     networks:
       - app-network
 
-  nginx:
-    image: nginx:latest
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf  # Nginx configuration
-      - ./app/public:/usr/share/nginx/html/public  # Serve static files
-      - ./app/.next:/usr/share/nginx/html/.next  # Serve Next.js built files
-    ports:
-      - "80:80"  # Expose Nginx on port 80
-    depends_on:
-      - frontend  # Ensure frontend is ready
-      - backend   # Ensure backend is ready
-    networks:
-      - app-network
-
 networks:
   app-network:
     driver: bridge
 
 volumes:
   postgres_data:
+  frontend_build:  # Define the shared volume for frontend build artifacts
