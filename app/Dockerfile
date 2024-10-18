@@ -25,8 +25,5 @@ RUN mkdir -p /frontend_build
 # Copy built files from the build stage
 COPY --from=build /app/.next /frontend_build/.next
 
-# Optionally, copy other necessary files, like next.config.js, if applicable
-COPY --from=build /app/next.config.js /frontend_build/next.config.js
-
 # Set the volume to be used by Nginx
 VOLUME /frontend_build
