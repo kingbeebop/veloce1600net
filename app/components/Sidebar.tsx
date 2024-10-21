@@ -26,18 +26,18 @@ const Sidebar: React.FC = () => {
         dispatch(autoLogin());
     }, [dispatch]);
 
-    useEffect(() => {
-        const fetchInitialCars = async () => {
-            if (carsCount === 0) {
-                setIsLoading(true)
-                await dispatch(fetchCars({}));
-                setIsLoading(false)
-            }
-        };
+    // useEffect(() => {
+    //     const fetchInitialCars = async () => {
+    //         if (carsCount === 0) {
+    //             setIsLoading(true)
+    //             await dispatch(fetchCars({}));
+    //             setIsLoading(false)
+    //         }
+    //     };
         
-        fetchInitialCars();
+    //     fetchInitialCars();
         
-    }, [dispatch, carsCount]);
+    // }, [dispatch, carsCount]);
 
     useEffect(() => {
         dispatch(updateFilters({ searchTerm }));
