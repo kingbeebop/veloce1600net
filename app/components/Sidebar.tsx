@@ -15,6 +15,7 @@ const Sidebar: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const cars = useSelector((state: RootState) => state.cars.cars);
+    const carsCount = useSelector((state: RootState) => state.cars.count)
     const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
     const filterState = useSelector((state: RootState) => state.filters);
 
@@ -27,14 +28,16 @@ const Sidebar: React.FC = () => {
 
     useEffect(() => {
         const fetchInitialCars = async () => {
-            if (cars.length === 0) {
+            if (carsCount === 0) {
+                setIsLoading(true)
                 await dispatch(fetchCars({}));
+                setIsLoading(false)
             }
         };
-        setIsLoading(true)
+        
         fetchInitialCars();
-        setIsLoading(false)
-    }, [dispatch, cars.length]);
+        
+    }, [dispatch, carsCount]);
 
     useEffect(() => {
         dispatch(updateFilters({ searchTerm }));
