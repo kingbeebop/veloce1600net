@@ -15,6 +15,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
@@ -25,6 +29,7 @@ import { AppDispatch, RootState } from "../redux/store";
 import { updateFilters, resetFilters } from "../redux/slices/filterSlice";
 import { fetchCars, filterCars } from "../redux/slices/carSlice"; 
 import SubmitCar from "./SubmitCar";
+import { Car } from "../types/car"; // Assuming you have a Car type
 
 const CarFilterBar: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
@@ -33,11 +38,12 @@ const CarFilterBar: React.FC = () => {
   const [priceValue, setPriceValue] = useState<number | null>(null);
   const [conditionFilter, setConditionFilter] = useState<'New' | 'Used' | 'Classic' | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isLoading = useSelector((state: RootState) => state.cars.loading);
+  const cars = useSelector((state: RootState) => state.cars.cars); // Car list from state
+  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const [isOpen, setIsOpen] = useState<boolean>(false); // For SubmitCar modal
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false); // For login modal
   const filterState = useSelector((state: RootState) => state.filters);
-  const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn); // Accessing isLoggedIn from authSlice
 
   useEffect(() => {
     const filters = {
@@ -56,9 +62,7 @@ const CarFilterBar: React.FC = () => {
   }, [filterState, dispatch]);
 
   const handleFetchCars = async () => {
-    setIsLoading(true);
     await dispatch(fetchCars({}));
-    setIsLoading(false);
   };
 
   const handleSearch = () => {
@@ -89,14 +93,6 @@ const CarFilterBar: React.FC = () => {
   const handleSnackbarClose = () => {
     setOpenLoginModal(false);
   };
-
-  if (isLoading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100%">
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" p={4} width="100%">
@@ -176,6 +172,22 @@ const CarFilterBar: React.FC = () => {
           </Box>
         </Box>
       </Collapse>
+
+      {isLoading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" mt={4}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <List>
+          {cars.map((car: Car) => (
+            <ListItem key={car.id}>
+              <ListItemButton>
+                <ListItemText primary={`${car.make} ${car.model}`} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+      )}
 
       {/* SubmitCar component in modal */}
       <SubmitCar isOpen={isOpen} onClose={handleCloseSubmitCar} />

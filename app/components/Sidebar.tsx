@@ -15,29 +15,26 @@ const Sidebar: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const cars = useSelector((state: RootState) => state.cars.cars);
-    const carsCount = useSelector((state: RootState) => state.cars.count)
+    const carsCount = useSelector((state: RootState) => state.cars.count);
+    const isLoading = useSelector((state: RootState) => state.cars.loading); // Get loading state from Redux
     const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
     const filterState = useSelector((state: RootState) => state.filters);
 
     const [searchTerm, setSearchTerm] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     useEffect(() => {
         dispatch(autoLogin());
     }, [dispatch]);
 
-    // useEffect(() => {
-    //     const fetchInitialCars = async () => {
-    //         if (carsCount === 0) {
-    //             setIsLoading(true)
-    //             await dispatch(fetchCars({}));
-    //             setIsLoading(false)
-    //         }
-    //     };
-        
-    //     fetchInitialCars();
-        
-    // }, [dispatch, carsCount]);
+    useEffect(() => {
+        const fetchInitialCars = async () => {
+            if (carsCount === 0) {
+                await dispatch(fetchCars({}));
+            }
+        };
+
+        fetchInitialCars();
+    }, [dispatch, carsCount]);
 
     useEffect(() => {
         dispatch(updateFilters({ searchTerm }));
@@ -87,7 +84,9 @@ const Sidebar: React.FC = () => {
             />
 
             {isLoading ? (
-                <CircularProgress />
+                <Box display="flex" justifyContent="center" alignItems="center" height="100%">
+                    <CircularProgress />
+                </Box>
             ) : (
                 <List>
                     {cars.map((car: Car) => (
