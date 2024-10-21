@@ -61,7 +61,6 @@ const CarFilterBar: React.FC = () => {
 
   const handleSearch = () => {
     handleFetchCars();
-    setSearchTerm("");
   };
 
   const handleClearFilters = () => {
