@@ -33,12 +33,19 @@ const RootLayout = ({ children }: { children: ReactNode }) => {
           <CssBaseline /> {/* Apply default Material-UI styles */}
           <Banner />
           <Provider store={store}>
-            <Box sx={{ display: 'flex' }}>
-              {/* Sidebar as a permanent fixture on the left */}
+            <Box sx={{ position: 'relative' }}> {/* Sidebar is now absolutely positioned */}
               <Sidebar />
 
-              {/* Main content area with Global State Initialization */}
-              <Box sx={{ flexGrow: 1, marginLeft: '250px', padding: '16px' }}>
+              {/* Main content area, now ignoring the sidebar */}
+              <Box
+                sx={{
+                  margin: '0 auto',  // Ensure the main content is centered
+                  padding: '16px',
+                  width: '100%',
+                  maxWidth: '1200px',  // You can adjust this max-width to control the content width
+                  position: 'relative',  // Ensure it stays in place relative to the screen, not affected by the sidebar
+                }}
+              >
                 <GlobalInitializer>{children}</GlobalInitializer>
               </Box>
             </Box>
