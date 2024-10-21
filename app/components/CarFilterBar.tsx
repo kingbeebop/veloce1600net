@@ -178,15 +178,7 @@ const CarFilterBar: React.FC = () => {
           <CircularProgress />
         </Box>
       ) : (
-        <List>
-          {cars.map((car: Car) => (
-            <ListItem key={car.id}>
-              <ListItemButton>
-                <ListItemText primary={`${car.make} ${car.model}`} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
+        <></>
       )}
 
       {/* SubmitCar component in modal */}
