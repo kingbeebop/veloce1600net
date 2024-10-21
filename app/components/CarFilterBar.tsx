@@ -25,7 +25,6 @@ import { AppDispatch, RootState } from "../redux/store";
 import { updateFilters, resetFilters } from "../redux/slices/filterSlice";
 import { fetchCars, filterCars } from "../redux/slices/carSlice"; 
 import SubmitCar from "./SubmitCar";
-import { Car } from "../types/car"; // Assuming you have a Car type
 
 const CarFilterBar: React.FC = () => {
   const dispatch: AppDispatch = useDispatch();
