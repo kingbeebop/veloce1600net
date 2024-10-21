@@ -14,11 +14,7 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
+  DialogActions
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
@@ -39,7 +35,6 @@ const CarFilterBar: React.FC = () => {
   const [conditionFilter, setConditionFilter] = useState<'New' | 'Used' | 'Classic' | null>(null);
   const [isFiltersOpen, setIsFiltersOpen] = useState<boolean>(false);
   const isLoading = useSelector((state: RootState) => state.cars.loading);
-  const cars = useSelector((state: RootState) => state.cars.cars); // Car list from state
   const isLoggedIn = useSelector((state: RootState) => state.auth.isLoggedIn);
   const [isOpen, setIsOpen] = useState<boolean>(false); // For SubmitCar modal
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false); // For login modal
