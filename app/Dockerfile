@@ -28,6 +28,9 @@ COPY --from=build /app/.next /app/.next
 # Copy package.json from the build stage to the export stage
 COPY --from=build /app/package*.json ./
 
+# Copy the public folder to the export stage
+COPY --from=build /app/public /app/public
+
 # Install production dependencies again (if needed)
 RUN npm install --production
 
