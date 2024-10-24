@@ -17,17 +17,26 @@ const CarImageUploader: React.FC<{
       setProgress(0);
 
       const file = files[0];
+      // Set options to ensure the image is compressed to less than 1 MB
       const options = {
         maxSizeMB: 1, // Maximum size in MB
         maxWidthOrHeight: 1920, // Maximum width or height
         useWebWorker: true,
         onProgress: (progress: number) => {
-          setProgress(progress);
+          setProgress(Math.round(progress)); // Update progress percentage
         },
       };
 
       try {
         const compressedFile = await imageCompression(file, options);
+        // Check if the compressed file size is acceptable
+        if (compressedFile.size > 1132761) {
+          console.error('Compressed file is still too large:', compressedFile.size);
+          // Handle the case where the compressed file is still too large
+          alert('The image is too large after compression. Please choose a smaller image.');
+          setIsCompressing(false);
+          return;
+        }
         onImageChange([compressedFile]); // Call the onImageChange prop with the compressed file
       } catch (error) {
         console.error('Error compressing image:', error);
