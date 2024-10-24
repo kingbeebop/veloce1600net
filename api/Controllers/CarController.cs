@@ -45,7 +45,6 @@ namespace api.Controllers
                     query = query.Where(car => car.Condition != null && car.Condition.Equals(condition, StringComparison.OrdinalIgnoreCase));
                 }
 
-
                 // Apply sorting based on the provided sort parameter
                 query = sort switch
                 {
@@ -111,13 +110,10 @@ namespace api.Controllers
             try
             {
                 // Handle image upload if provided
-                if (imageFile != null && imageFile.Length > 0)
+                var (imageUrl, message) = await fileUploadService.UploadFileAsync(imageFile);
+                if (!string.IsNullOrEmpty(imageUrl))
                 {
-                    var imageUrl = await fileUploadService.UploadFileAsync(imageFile);
-                    if (!string.IsNullOrEmpty(imageUrl))
-                    {
-                        car.ImagePath = imageUrl; // Set the ImagePath property on the Car model
-                    }
+                    car.ImagePath = imageUrl; // Set the ImagePath property on the Car model
                 }
 
                 // Set CreatedAt and UpdatedAt properties
@@ -128,7 +124,7 @@ namespace api.Controllers
                 _context.Cars.Add(car);
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction(nameof(GetCar), new { id = car.Id }, car); // Return 201 Created
+                return CreatedAtAction(nameof(GetCar), new { id = car.Id }, new { car, message }); // Return 201 Created with message
             }
             catch (DbUpdateException dbEx)
             {
@@ -157,7 +153,8 @@ namespace api.Controllers
                 if (existingCar == null) return NotFound($"Car with ID {id} not found."); // Return 404 if not found
 
                 // Handle image upload if a new file is provided
-                if (imageFile != null && imageFile.Length > 0)
+                var (imageUrl, message) = await fileUploadService.UploadFileAsync(imageFile);
+                if (!string.IsNullOrEmpty(imageUrl))
                 {
                     // Delete the old image if it exists
                     if (!string.IsNullOrEmpty(existingCar.ImagePath))
@@ -169,12 +166,8 @@ namespace api.Controllers
                         }
                     }
 
-                    // Upload the new image
-                    var imageUrl = await fileUploadService.UploadFileAsync(imageFile);
-                    if (!string.IsNullOrEmpty(imageUrl))
-                    {
-                        existingCar.ImagePath = imageUrl; // Update the ImagePath
-                    }
+                    // Update the ImagePath
+                    existingCar.ImagePath = imageUrl; 
                 }
 
                 // Update the car properties from the provided car data
@@ -192,7 +185,7 @@ namespace api.Controllers
                 _context.Entry(existingCar).State = EntityState.Modified;
                 await _context.SaveChangesAsync();
 
-                return Ok(existingCar); // Return the updated car object
+                return Ok(new { existingCar, message }); // Return the updated car object and message
             }
             catch (DbUpdateConcurrencyException)
             {

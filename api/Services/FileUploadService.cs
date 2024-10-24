@@ -1,16 +1,25 @@
 public class FileUploadService
 {
     private readonly IWebHostEnvironment _environment;
+    private const long MaxFileSize = 1132761; // Maximum file size in bytes (1 MB)
 
     public FileUploadService(IWebHostEnvironment environment)
     {
         _environment = environment;
     }
 
-    public async Task<string> UploadFileAsync(IFormFile file)
+    public async Task<(string filePath, string message)> UploadFileAsync(IFormFile file)
     {
+        // Check if the file is null or has zero length
         if (file == null || file.Length == 0)
-            return null;
+            return (null, "No file uploaded.");
+
+        // Check if the file size exceeds the maximum allowed size
+        if (file.Length > MaxFileSize)
+        {
+            // File is too large, return a message but proceed with no image
+            return (null, "File exceeds maximum size of 1 MB. Car created without an image.");
+        }
 
         var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
         Directory.CreateDirectory(uploadsFolder); // Ensure the directory exists
@@ -23,7 +32,7 @@ public class FileUploadService
             await file.CopyToAsync(stream);
         }
 
-        return $"/uploads/{uniqueFileName}"; // Return the relative URL to access the file
+        return ($"/uploads/{uniqueFileName}", "File uploaded successfully.");
     }
 
     public void DeleteFile(string filePath)
