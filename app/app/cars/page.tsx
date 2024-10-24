@@ -42,9 +42,9 @@ const CarList: React.FC = () => {
   return (
     <Container>
       <CarFilterBar />
-      <Box display="flex" justifyContent="center" width="100%" flexWrap="wrap">
+      <Box display="flex" flexDirection="column" alignItems="center" width="100%">
         {cars.map((car) => (
-          <Box key={car.id} width={{ xs: '100%', sm: '48%' }} m={1}>
+          <Box key={car.id} width={{ xs: '100%', sm: '80%', md: '70%', lg: '60%' }} m={1}>
             <CarTile car={car} setLoading={setIsLoading} />
           </Box>
         ))}

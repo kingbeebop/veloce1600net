@@ -1,11 +1,12 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
-import { Button, Box, Container, Typography } from '@mui/material'; // Import MUI components
-import CarDetail from '../../../components/CarDetail';
+import { Button, Box, Container, Typography } from '@mui/material';
+import CarDetail from '../../../components/CarDetail/CarDetail';
 import { fetchCarById } from '../../../utils/api';
 import { Car } from '../../../types/car';
 import { useEffect, useState } from 'react';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const CarPage = ({ params }: { params: { id: string } }) => {
   const router = useRouter();
@@ -29,17 +30,35 @@ const CarPage = ({ params }: { params: { id: string } }) => {
   }, [carId]);
 
   return (
-    <Container maxWidth="lg" sx={{ padding: 4 }}>
-      <Box display="flex" justifyContent="flex-start" marginBottom={2}>
-        <Button variant="contained" color="primary" onClick={() => router.push('/cars')}>
-          Back to Cars
-        </Button>
-      </Box>
+    <Container maxWidth="lg" sx={{ padding: 4, position: 'relative' }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => router.push('/cars')}
+        sx={{
+          position: 'absolute',
+          top: 16,
+          left: '-70px', // Positioned further left from the main body
+          padding: '8px 16px',
+          backgroundColor: 'black',
+          color: 'white',
+          '&:hover': {
+            backgroundColor: 'grey.800',
+          },
+          transition: 'background-color 0.3s ease',
+          zIndex: 1,
+        }}
+      >
+        <ArrowBackIcon sx={{ mr: 1 }} />
+        Back to Cars
+      </Button>
 
       {loading ? (
         <Typography variant="h6">Loading...</Typography>
       ) : car ? (
-        <CarDetail car={car} carId={carId} />
+        <Box sx={{ mt: 4 }}> {/* Added margin-top for spacing */}
+          <CarDetail car={car} carId={carId} />
+        </Box>
       ) : (
         <Typography variant="h6">Car not found</Typography>
       )}

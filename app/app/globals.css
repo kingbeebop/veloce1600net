@@ -3,50 +3,195 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff; /* Tailwind's white */
-  --foreground: #171717; /* Tailwind's gray-900 */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #1f2937; /* Tailwind's gray-800 */
-    --foreground: #d1d5db; /* Tailwind's gray-300 */
-  }
+  --background: #000000; /* Black background */
+  --foreground: #ffffff; /* White text */
+  --accent: #860b0b; /* Accent color for underline and highlights */
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Roboto', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  min-height: 100vh; /* Ensure the body covers full viewport height */
+  overflow-y: auto; /* Allow vertical scrolling */
+  scroll-behavior: smooth; /* Smooth scrolling for the entire page */
+}
+
+/* Scrollbar styles for WebKit browsers (Chrome, Safari, Edge) */
+body::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar */
+  background: transparent; /* Hide the background */
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--accent); /* Use the accent color for the scrollbar handle */
+  border-radius: 10px; /* Round corners of the scrollbar handle */
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(134, 11, 11, 0.7); /* Darker color on hover */
+}
+
+/* Scrollbar styles for Firefox */
+body {
+  scrollbar-width: thin; /* Thin scrollbar */
+  scrollbar-color: var(--accent) transparent; /* Scrollbar color and background */
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: var(--foreground);
+  text-shadow: 2px 2px 5px black; /* Text shadow for headers */
 }
 
 p {
   color: var(--foreground);
-  margin-bottom: 1rem; /* Tailwind's mb-4 */
-}
-
-:focus {
-  outline: 2px solid var(--foreground);
 }
 
 button, input, select {
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Remove blue color from buttons */
+button {
+  background-color: transparent;
+  color: var(--foreground); /* White text */
+  border: 2px solid var(--foreground); /* White border */
 }
 
 button:hover {
-  background-color: rgba(0, 0, 0, 0.1); /* Custom hover effect */
+  background-color: rgba(134, 11, 11, 0.3); /* Slight hover effect */
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Custom enter button styling */
+button.enter {
+  background-color: transparent; /* No background */
+  color: white; /* White text */
+  border-radius: 8px; /* Rounded borders */
+  padding: 10px 20px; /* Add padding */
+  border: 2px solid var(--foreground); /* White border */
+  cursor: pointer;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
 
-  .bg-gradient {
-    background: linear-gradient(90deg, var(--foreground), var(--background));
+button.enter:hover {
+  background-color: white; /* Black background on hover */
+  color: black; /* White text on hover */
+  border-color: white; /* White border on hover */
+}
+
+/* Loading Screen */
+.loading-screen {
+  background-color: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  transition: opacity 0.5s ease; /* Smooth fade out */
+}
+
+.fade-out {
+  opacity: 0; /* Fade out */
+  pointer-events: none; /* Prevent interactions while fading out */
+}
+
+/* Existing global styles for other components */
+
+/* Banner logo style */
+.logo {
+  width: 200px;
+  height: auto;
+}
+
+/* Loading screen specific logo style */
+.loading-logo {
+  width: 400px;
+  height: auto;
+  transition: transform 0.6s ease, opacity 2s ease;
+}
+
+/* Other loading screen styles */
+.loading-screen {
+  background-color: black;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden; /* Prevent overflow during slide animations */
+}
+
+.loading-screen-exit {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: black;
+  z-index: 9999;
+}
+
+/* Other relevant styles can go here */
+
+
+/* Fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
   }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Banner */
+.banner {
+  background-color: indigo;
+  color: black;
+  text-align: center;
+  padding: 2rem;
+  height: 200px; /* Fixed height for the banner */
+}
+
+.header {
+  background-color: black;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.header-background {
+  height: 200px; /* Fixed height for header */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+}
+
+.navigation {
+  background-color: black;
+  padding: 10px 0;
+}
+
+nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 1rem;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
 }

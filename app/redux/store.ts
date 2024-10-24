@@ -3,7 +3,8 @@ import carReducer from './slices/carSlice';
 import ownerReducer from './slices/ownerSlice';
 import saleReducer from './slices/saleSlice';
 import filterReducer from './slices/filterSlice';
-import authReducer from './slices/authSlice'
+import authReducer from './slices/authSlice';
+import appReducer from './slices/appSlice'; // Add the appSlice here
 
 // Create the store
 const store = configureStore({
@@ -13,6 +14,7 @@ const store = configureStore({
     cars: carReducer, // Car state
     owners: ownerReducer, // Owner state
     sales: saleReducer, // Sale state
+    app: appReducer, // App initialization state
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ thunk: true }),
   devTools: process.env.NODE_ENV !== 'production', // Enable Redux DevTools in non-production environments

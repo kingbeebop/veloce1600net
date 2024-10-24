@@ -1,103 +1,116 @@
 "use client";
 
-import Image from "next/image";
+import React, { useState, useEffect, useRef } from 'react';
+import dynamic from 'next/dynamic';
+import Header from '../components/Header';
+import Content from '../components/Content';
+import { aboutSectionData as aboutData } from '../components/sections/About/data';
+import { contactSectionData as contactData } from '../components/sections/Contact/data';
+import { sellSectionData as sellData } from '../components/sections/Sell/data';
+import { servicesSectionData as servicesData } from '../components/sections/Services/data';
+import { storeSectionData as storeData } from '../components/sections/Store/data';
+import { eventsSectionData as eventsData } from '../components/sections/Events/data';
 
-export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+// Dynamically import sections
+const AboutSection = dynamic(() => import('../components/sections/About')) as React.FC;
+const ContactSection = dynamic(() => import('../components/sections/Contact')) as React.FC;
+const SellSection = dynamic(() => import('../components/sections/Sell')) as React.FC;
+const ServicesSection = dynamic(() => import('../components/sections/Services')) as React.FC;
+const StoreSection = dynamic(() => import('../components/sections/Store')) as React.FC;
+const EventsSection = dynamic(() => import('../components/sections/Events')) as React.FC;
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+// Define section data with types
+interface SectionData {
+  title: string;
+  image: string;
+  component: React.FC;
+  path: string;
 }
+
+const sectionsData: SectionData[] = [
+  { title: aboutData.title, image: aboutData.image, component: AboutSection, path: '/about' },
+  { title: contactData.title, image: contactData.image, component: ContactSection, path: '/contact' },
+  { title: sellData.title, image: sellData.image, component: SellSection, path: '/sell' },
+  { title: servicesData.title, image: servicesData.image, component: ServicesSection, path: '/services' },
+  { title: eventsData.title, image: eventsData.image, component: EventsSection, path: '/events' },
+  { title: storeData.title, image: storeData.image, component: StoreSection, path: '/store' },
+];
+
+const Page: React.FC = () => {
+  const [activeSection, setActiveSection] = useState<number>(0);
+  const sectionRefs = useRef<(HTMLDivElement | null)[]>(Array(sectionsData.length).fill(null));
+  const scrollTimeoutRef = useRef<number | null>(null); // Ref to hold timeout ID
+
+  // Debounced scroll handler
+  const handleScroll = () => {
+    if (scrollTimeoutRef.current) return; // If timeout is active, ignore scroll
+
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      const scrollPosition = window.scrollY;
+      const sectionOffsets = sectionRefs.current.map(ref => ref?.offsetTop || 0);
+      let currentActiveSection = activeSection;
+
+      // Find the active section based on scroll position
+      for (let i = 0; i < sectionOffsets.length; i++) {
+        if (scrollPosition >= sectionOffsets[i] - 200) { // Adjust threshold for when to update
+          currentActiveSection = i;
+        }
+      }
+
+      if (currentActiveSection !== activeSection) {
+        setActiveSection(currentActiveSection);
+      }
+
+      scrollTimeoutRef.current = null; // Clear timeout after processing
+    }, 100); // Adjust timeout duration as needed
+  };
+
+  // Handle initial URL to scroll to the appropriate section
+  useEffect(() => {
+    const hash = window.location.hash;
+    const sectionTitle = hash.replace('#', '');
+
+    const matchingSection = sectionsData.find(section => section.title.toLowerCase() === sectionTitle.toLowerCase());
+    if (matchingSection) {
+      const matchingSectionIndex = sectionsData.indexOf(matchingSection);
+      setActiveSection(matchingSectionIndex);
+      sectionRefs.current[matchingSectionIndex]?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Attach scroll event listener
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleSectionChange = (index: number) => {
+    if (index !== activeSection) {
+      setActiveSection(index);
+      window.location.hash = sectionsData[index].title.toLowerCase();
+      sectionRefs.current[index]?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <>
+      <Header
+        sections={sectionsData.map(({ title, image }) => ({ title, image }))}
+        activeSection={activeSection}
+        setActiveSection={handleSectionChange}
+      />
+
+      <Content onSectionChange={handleSectionChange} activeSection={activeSection}>
+        {sectionsData.map((section, index) => (
+          <div
+            key={index}
+            ref={(el) => { sectionRefs.current[index] = el; }}
+            style={{ minHeight: '100vh', scrollSnapAlign: 'start' }} // Make each section snap into view
+          >
+            <section.component />
+          </div>
+        ))}
+      </Content>
+    </>
+  );
+};
+
+export default Page;

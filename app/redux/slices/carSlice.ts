@@ -7,6 +7,7 @@ import {
     submitCar,
     updateCar as apiUpdateCar,
     deleteCar as apiDeleteCar,
+    fetchCarById as apiFetchCarById
 } from '../../utils/api';
 import { RootState } from '../store';
 
@@ -47,7 +48,6 @@ const initialState: CarState = {
 export const fetchCars = createAsyncThunk<CarApiResponse, { page?: number; pageSize?: number }>(
     'cars/fetchCars',
     async ({ page = 1, pageSize = 20 } = {}) => {
-
         return await apiFetchCars(page, pageSize);
     }
 );
@@ -72,9 +72,11 @@ export const createCar = createAsyncThunk<Car, { newCar: Omit<Car, 'id'>; imageF
 
 export const updateCar = createAsyncThunk<Car, { id: number; updatedCar: CarData; imageFile?: File | null }>(
     'cars/updateCar',
-    async ({ id, updatedCar, imageFile }, { rejectWithValue }) => {
+    async ({ id, updatedCar, imageFile }, { dispatch, rejectWithValue }) => {
         try {
-            return await apiUpdateCar(id, updatedCar, imageFile ?? null);
+            const updatedCarData = await apiUpdateCar(id, updatedCar, imageFile ?? null);
+            dispatch(carSlice.actions.updateCarInState({ id, updatedCar: updatedCarData }));
+            return updatedCarData;
         } catch {
             return rejectWithValue("Failed to update car");
         }
@@ -93,10 +95,39 @@ export const deleteCar = createAsyncThunk<number, number>(
     }
 );
 
+export const getCarById = createAsyncThunk<Car, number>(
+    'cars/getCarById',
+    async (carId, { getState, rejectWithValue }) => {
+        const state = getState() as RootState;
+        const existingCar = state.cars.allCars.find(car => car.id === carId);
+        if (existingCar) {
+            return existingCar; // Return existing car if found
+        }
+
+        try {
+            return await apiFetchCarById(carId); // Fetch from API if not found
+        } catch {
+            return rejectWithValue("Failed to fetch car");
+        }
+    }
+);
+
 const carSlice = createSlice({
     name: 'cars',
     initialState,
     reducers: {
+        updateCarInState(state, action: PayloadAction<{ id: number; updatedCar: Car }>) {
+            const { id, updatedCar } = action.payload;
+            const index = state.allCars.findIndex(car => car.id === id);
+            if (index !== -1) {
+                state.allCars[index] = updatedCar; // Update the car in allCars
+                // Update the car in filtered cars as well
+                const filteredIndex = state.cars.findIndex(car => car.id === id);
+                if (filteredIndex !== -1) {
+                    state.cars[filteredIndex] = updatedCar;
+                }
+            }
+        },
         filterCars(state, action: PayloadAction<{ filters: FilterState }>) {
             const { searchTerm, priceFilter, conditionFilter } = action.payload.filters;
 
@@ -190,15 +221,7 @@ const carSlice = createSlice({
             })
             .addCase(updateCar.fulfilled, (state, action) => {
                 state.loading = false;
-                const index = state.allCars.findIndex(car => car.id === action.payload.id);
-                if (index !== -1) {
-                    state.allCars[index] = action.payload; // Update the car in allCars
-                    // Optionally update the car in filtered cars
-                    const filteredIndex = state.cars.findIndex(car => car.id === action.payload.id);
-                    if (filteredIndex !== -1) {
-                        state.cars[filteredIndex] = action.payload;
-                    }
-                }
+                // Update is now handled by the updateCarInState reducer
             })
             .addCase(updateCar.rejected, (state, action) => {
                 state.loading = false;
@@ -218,17 +241,28 @@ const carSlice = createSlice({
             .addCase(deleteCar.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload as string; // Set error message
+            })
+            .addCase(getCarById.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(getCarById.fulfilled, (state, action) => {
+                state.loading = false;
+                // Optionally do something with the fetched car
+            })
+            .addCase(getCarById.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string; // Set error message
             });
     },
 });
 
-// Export actions and selectors
-export const { filterCars, setAllCars, setCurrentPage, resetCars } = carSlice.actions;
+// Selectors
 export const selectCars = (state: RootState) => state.cars.cars;
-export const selectAllCars = (state: RootState) => state.cars.allCars;
-export const selectCount = (state: RootState) => state.cars.count;
-export const selectCurrentPage = (state: RootState) => state.cars.currentPage;
+export const selectCarCount = (state: RootState) => state.cars.count;
 export const selectLoading = (state: RootState) => state.cars.loading;
 export const selectError = (state: RootState) => state.cars.error;
 
+// Export actions and reducer
+export const { setAllCars, filterCars, setCurrentPage, resetCars } = carSlice.actions;
 export default carSlice.reducer;
