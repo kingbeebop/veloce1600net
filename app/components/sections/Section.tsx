@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button } from '@mui/material';
 import { SectionProps } from '../../types/section';
+import { parseFormattedText } from '../../utils/text'; // Import the utility
 
 const Section: React.FC<SectionProps> = ({ title, header, content, buttons, image }) => {
   if (image) {
@@ -37,7 +38,7 @@ const Section: React.FC<SectionProps> = ({ title, header, content, buttons, imag
             variant={item.variant} 
             sx={{ marginBottom: 2, textIndent: '2em' }} // Adds indentation and spacing
           >
-            {item.text}
+            {parseFormattedText(item.text)} {/* Use parseFormattedText to format the text */}
           </Typography>
         ))}
       </Box>
