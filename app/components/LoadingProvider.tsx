@@ -6,55 +6,90 @@ import { selectIsInitialized } from '../redux/slices/appSlice';
 import { fetchCars } from '../redux/slices/carSlice';
 import LoadingScreen from './LoadingScreen';
 import { preloadSectionImages } from '../utils/preloadImages';
-import { usePathname } from 'next/navigation'; // Import usePathname instead of useRouter
+import { usePathname } from 'next/navigation';
+import CircularProgress from '@mui/material/CircularProgress';
+import Box from '@mui/material/Box';
 
 const LoadingProvider = ({ children }: { children: ReactNode }) => {
   const dispatch = useDispatch<AppDispatch>();
   const isInitialized = useSelector(selectIsInitialized);
   const [loadingComplete, setLoadingComplete] = useState(false);
-  const pathname = usePathname(); // Use usePathname to get the current path
+  const [isChecking, setIsChecking] = useState(true);
+  const [onLoadingScreen, setOnLoadingScreen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken'); // Retrieve access token from local storage
-    const isCarsRoute = pathname.startsWith('/cars'); // Check if the current route is /cars or a subroute
+    const accessToken = localStorage.getItem('accessToken');
+    const isCarsRoute = pathname.startsWith('/cars');
 
     const initializeAppState = async () => {
-      await preloadSectionImages(); // Preload all section images
-      await dispatch(fetchCars({})); // Fetch data
-      dispatch(initializeApp()); // Initialize app
-      setLoadingComplete(true); // Mark loading as complete
+      await preloadSectionImages();
+      await dispatch(fetchCars({}));
+      dispatch(initializeApp());
+      setLoadingComplete(true);
     };
 
-    // If there's an access token or we're on the cars route, skip loading
-    if (accessToken || isCarsRoute) {
-      setLoadingComplete(true); // Set loading as complete
-      dispatch(initializeApp()); // Initialize app if not already initialized
+    // Determine if we need to initialize the app state
+    if (!accessToken && !isCarsRoute) {
+      // If there's no access token and not on the cars route, show loading screen
+      initializeAppState();
+      setOnLoadingScreen(true); // Show loading screen as we are fetching data
     } else {
-      if (!isInitialized) {
-        initializeAppState(); // Initialize app state if not already initialized
-      } else {
-        setLoadingComplete(true); // Already initialized
+      // If we have an access token or we're on the cars route
+      setLoadingComplete(true); // Skip loading screen
+      dispatch(initializeApp());
+    }
+
+    setIsChecking(false); // Mark checking as complete
+  }, [dispatch, isInitialized, pathname]);
+
+  // Effect to handle loading screen visibility based on loading state
+  useEffect(() => {
+    if (!isChecking) {
+      if (!loadingComplete) {
+        setOnLoadingScreen(true); // Show loading screen if not loaded yet
+      } else if (onLoadingScreen) {
+        // If loading is complete but onLoadingScreen is still true, we should show it
+        setOnLoadingScreen(true); 
       }
     }
-  }, [dispatch, isInitialized, pathname]); // Include pathname as a dependency
+  }, [isChecking, loadingComplete, onLoadingScreen]);
 
   return (
     <div style={{ position: 'relative', height: '100vh' }}>
-      <div style={{ visibility: loadingComplete ? 'visible' : 'hidden' }}>
-        {children}
-      </div>
-      <LoadingScreen 
-        loadingComplete={loadingComplete} 
-        onAnimationComplete={() => setLoadingComplete(true)} 
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 9999,
-        }}
-      />
+      {isChecking ? ( // Show progress wheel while checking
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+          }}
+        >
+          <CircularProgress sx={{ color: 'white' }} /> {/* White circular progress */}
+        </Box>
+      ) : (
+        <div style={{ visibility: loadingComplete ? 'visible' : 'hidden' }}>
+          {children}
+        </div>
+      )}
+      {onLoadingScreen && ( // Show loading screen if onLoadingScreen is true
+        <LoadingScreen
+          loadingComplete={loadingComplete}
+          onAnimationComplete={() => {
+            // Hide loading screen on user interaction
+            setOnLoadingScreen(false); 
+          }}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 9999,
+          }}
+        />
+      )}
     </div>
   );
 };
