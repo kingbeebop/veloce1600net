@@ -95,7 +95,7 @@ public class Startup
         services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
 
         // Redis configuration
-        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
+        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6380"));
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
