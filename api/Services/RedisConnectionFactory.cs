@@ -1,6 +1,5 @@
 using StackExchange.Redis;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 public interface IRedisConnectionFactory
@@ -16,7 +15,7 @@ public class RedisConnectionFactory : IRedisConnectionFactory
 
     public RedisConnectionFactory(string configuration, int maxRetries = 5, int retryDelayMilliseconds = 1000)
     {
-        _configuration = configuration;
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _maxRetries = maxRetries;
         _retryDelay = TimeSpan.FromMilliseconds(retryDelayMilliseconds);
     }

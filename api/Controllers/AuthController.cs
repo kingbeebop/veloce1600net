@@ -25,6 +25,11 @@ public class AuthController : ControllerBase
     [HttpPost("token")]
     public async Task<IActionResult> GenerateToken([FromBody] LoginModel model)
     {
+        if (model == null || string.IsNullOrEmpty(model.Username) || string.IsNullOrEmpty(model.Password))
+        {
+            return BadRequest(new { message = "Invalid login details." });
+        }
+
         var user = await _userManager.FindByNameAsync(model.Username);
         if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
         {
@@ -37,7 +42,7 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.Name, user.UserName)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var accessToken = new JwtSecurityToken(
@@ -61,6 +66,11 @@ public class AuthController : ControllerBase
     [HttpPost("token/refresh")]
     public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenModel model)
     {
+        if (model == null || string.IsNullOrEmpty(model.RefreshToken))
+        {
+            return BadRequest(new { message = "Invalid refresh token." });
+        }
+
         // Validate the refresh token
         var userId = await _tokenRepository.ValidateRefreshTokenAsync(model.RefreshToken);
         if (string.IsNullOrEmpty(userId))
@@ -81,7 +91,7 @@ public class AuthController : ControllerBase
             new Claim(ClaimTypes.Name, user.UserName)
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var newAccessToken = new JwtSecurityToken(

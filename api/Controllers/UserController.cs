@@ -19,7 +19,6 @@ public class UserController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<UserResponse>> GetUser()
     {
-        // Retrieve the user's ID from the token claims
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
@@ -29,13 +28,11 @@ public class UserController : ControllerBase
         var userId = userIdClaim.Value; // Extract the user ID
         var user = await _userManager.FindByIdAsync(userId);
 
-        // If user is not found, return a detailed error message
         if (user == null)
         {
             return NotFound(new { message = "User not found." });
         }
 
-        // Construct and return the user response
         var userResponse = new UserResponse
         {
             Username = user.UserName,
@@ -49,7 +46,6 @@ public class UserController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterRequest request)
     {
-        // Validate the request
         if (request == null || string.IsNullOrEmpty(request.Username) || 
             string.IsNullOrEmpty(request.Password) || string.IsNullOrEmpty(request.Email))
         {
@@ -70,7 +66,6 @@ public class UserController : ControllerBase
             return BadRequest(new { message = "User registration failed.", errors = result.Errors });
         }
 
-        // Construct and return the user response
         var userResponse = new UserResponse
         {
             Username = user.UserName,
