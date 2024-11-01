@@ -100,7 +100,7 @@ public class Startup
         // Redis configuration using the factory
         services.AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
         services.AddSingleton<IConnectionMultiplexer>(provider => 
-            provider.GetRequiredService<IRedisConnectionFactory>().GetConnection());
+            provider.GetRequiredService<IRedisConnectionFactory>().GetConnectionAsync());
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
