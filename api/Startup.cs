@@ -124,7 +124,18 @@ public class Startup
 
     private void ConfigureRedis(IServiceCollection services)
     {
-        services.AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
+        // Read Redis configuration from appsettings.json or environment variables
+        var redisConfiguration = Configuration["Redis:ConnectionString"];
+        
+        // Ensure the configuration string is not null or empty
+        if (string.IsNullOrEmpty(redisConfiguration))
+        {
+            throw new InvalidOperationException("Redis connection string is not configured.");
+        }
+
+        services.AddSingleton<IRedisConnectionFactory>(provider =>
+            new RedisConnectionFactory(redisConfiguration)); // Pass the configuration string here
+
         services.AddSingleton<IConnectionMultiplexer>(provider =>
         {
             var factory = provider.GetRequiredService<IRedisConnectionFactory>();
