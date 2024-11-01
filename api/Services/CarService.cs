@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 public class CarService
 {
     private readonly ICarRepository _carRepository;
-    private readonly IRedisService _redisService; // Inject the Redis service
+    private readonly IRedisService _redisService;
 
     public CarService(ICarRepository carRepository, IRedisService redisService)
     {
@@ -17,59 +17,117 @@ public class CarService
 
     public async Task<IEnumerable<CarDto>> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
     {
-        var cacheKey = $"cars:{search}:{sort}:{page}:{pageSize}";
+        var cacheKey = GenerateCacheKey("cars", search, sort, page, pageSize);
+        var cachedCars = await GetFromCacheAsync<IEnumerable<CarDto>>(cacheKey);
 
-        // Check Redis cache first
-        var cachedCars = await _redisService.GetStringAsync(cacheKey);
         if (cachedCars != null)
         {
-            return JsonSerializer.Deserialize<IEnumerable<CarDto>>(cachedCars);
+            return cachedCars;
         }
 
-        // Retrieve cars from the database
         var cars = await _carRepository.GetCarsAsync(search, sort, page, pageSize);
+        var carDtos = MapToCarDtos(cars);
 
-        // Convert Car entities to CarDto
-        var carDtos = cars.Select(car => new CarDto
-        {
-            Id = car.Id,
-            Make = car.Make,
-            Model = car.Model,
-            Year = car.Year,
-            Vin = car.Vin,
-            Mileage = car.Mileage,
-            Price = car.Price,
-            Features = car.Features,
-            Condition = car.Condition,
-            ImagePath = car.ImagePath
-        }).ToList();
-
-        // Cache the result in Redis
-        await _redisService.SetStringAsync(cacheKey, JsonSerializer.Serialize(carDtos), TimeSpan.FromMinutes(5));
-
+        await CacheResultAsync(cacheKey, carDtos);
         return carDtos;
     }
 
     public async Task<CarDto> GetCarByIdAsync(int id)
     {
-        var cacheKey = $"car:{id}";
+        var cacheKey = GenerateCacheKey("car", id.ToString());
+        var cachedCar = await GetFromCacheAsync<CarDto>(cacheKey);
 
-        // Check Redis cache first
-        var cachedCar = await _redisService.GetStringAsync(cacheKey);
         if (cachedCar != null)
         {
-            return JsonSerializer.Deserialize<CarDto>(cachedCar);
+            return cachedCar;
         }
 
-        // Retrieve car from the database
         var car = await _carRepository.GetCarByIdAsync(id);
         if (car == null)
         {
             return null; // Handle not found case in the controller
         }
 
-        // Convert to CarDto
-        var carDto = new CarDto
+        var carDto = MapToCarDto(car);
+        await CacheResultAsync(cacheKey, carDto);
+        return carDto;
+    }
+
+    public async Task AddCarAsync(CarDto carDto)
+    {
+        var car = MapToCar(carDto);
+        await _carRepository.AddCarAsync(car);
+        await InvalidateCacheAsync();
+    }
+
+    public async Task UpdateCarAsync(int id, CarDto carDto)
+    {
+        var existingCar = await _carRepository.GetCarByIdAsync(id);
+        if (existingCar == null)
+        {
+            throw new KeyNotFoundException($"Car with ID {id} not found.");
+        }
+
+        UpdateCarFromDto(existingCar, carDto);
+        await _carRepository.UpdateCarAsync(existingCar);
+        await InvalidateCacheAsync(id);
+    }
+
+    public async Task DeleteCarAsync(int id)
+    {
+        await _carRepository.DeleteCarAsync(id);
+        await InvalidateCacheAsync(id);
+    }
+
+    private async Task<T?> GetFromCacheAsync<T>(string cacheKey)
+    {
+        try
+        {
+            var cachedValue = await _redisService.GetStringAsync(cacheKey);
+            return cachedValue != null ? JsonSerializer.Deserialize<T>(cachedValue) : default;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Redis error while fetching {cacheKey}: {ex.Message}");
+            return default;
+        }
+    }
+
+    private async Task CacheResultAsync<T>(string cacheKey, T value, TimeSpan? expiration = null)
+    {
+        try
+        {
+            await _redisService.SetStringAsync(cacheKey, JsonSerializer.Serialize(value), expiration ?? TimeSpan.FromMinutes(5));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Redis error while caching {cacheKey}: {ex.Message}");
+        }
+    }
+
+    private async Task InvalidateCacheAsync(int? id = null)
+    {
+        if (id.HasValue)
+        {
+            await _redisService.SetStringAsync(GenerateCacheKey("car", id.Value.ToString()), null);
+        }
+        // Optionally clear all car caches, if desired
+        // await _redisService.KeyDeleteAsync("cars:*"); // Uncomment if needed
+    }
+
+    private string GenerateCacheKey(params string[] parts)
+    {
+        return string.Join(":", parts);
+    }
+
+    private IEnumerable<CarDto> MapToCarDtos(IEnumerable<Car> cars)
+    {
+        return cars.Select(MapToCarDto).ToList();
+    }
+
+    private CarDto MapToCarDto(Car car)
+    {
+        return new CarDto
         {
             Id = car.Id,
             Make = car.Make,
@@ -82,17 +140,11 @@ public class CarService
             Condition = car.Condition,
             ImagePath = car.ImagePath
         };
-
-        // Cache the result in Redis
-        await _redisService.SetStringAsync(cacheKey, JsonSerializer.Serialize(carDto), TimeSpan.FromMinutes(5));
-
-        return carDto;
     }
 
-    public async Task AddCarAsync(CarDto carDto)
+    private Car MapToCar(CarDto carDto)
     {
-        // Map DTO to entity
-        var car = new Car
+        return new Car
         {
             Make = carDto.Make,
             Model = carDto.Model,
@@ -106,58 +158,19 @@ public class CarService
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
-
-        // Add to the repository
-        await _carRepository.AddCarAsync(car);
-
-        // Invalidate the cache
-        await InvalidateCacheAsync();
     }
 
-    public async Task UpdateCarAsync(int id, CarDto carDto)
+    private void UpdateCarFromDto(Car car, CarDto carDto)
     {
-        // Retrieve the existing car
-        var existingCar = await _carRepository.GetCarByIdAsync(id);
-        if (existingCar == null)
-        {
-            throw new KeyNotFoundException($"Car with ID {id} not found.");
-        }
-
-        // Update properties
-        existingCar.Make = carDto.Make;
-        existingCar.Model = carDto.Model;
-        existingCar.Year = carDto.Year;
-        existingCar.Vin = carDto.Vin;
-        existingCar.Mileage = carDto.Mileage;
-        existingCar.Price = carDto.Price;
-        existingCar.Features = carDto.Features;
-        existingCar.Condition = carDto.Condition;
-        existingCar.ImagePath = carDto.ImagePath;
-        existingCar.UpdatedAt = DateTime.UtcNow;
-
-        // Save changes to the repository
-        await _carRepository.UpdateCarAsync(existingCar);
-
-        // Invalidate the cache for the specific car
-        await _redisService.SetStringAsync($"car:{id}", null); // Remove from cache
-        await InvalidateCacheAsync();
-    }
-
-    public async Task DeleteCarAsync(int id)
-    {
-        // Delete the car from the repository
-        await _carRepository.DeleteCarAsync(id);
-
-        // Invalidate the cache for the specific car
-        await _redisService.SetStringAsync($"car:{id}", null); // Remove from cache
-        await InvalidateCacheAsync();
-    }
-
-    private async Task InvalidateCacheAsync()
-    {
-        // Optionally delete all cached car data
-        // This is a basic way to remove all car-related cached items.
-        // Be cautious with this approach; it can impact performance.
-        // await _redisService.KeyDeleteAsync("cars:*"); // Uncomment if you implement a better cache strategy
+        car.Make = carDto.Make;
+        car.Model = carDto.Model;
+        car.Year = carDto.Year;
+        car.Vin = carDto.Vin;
+        car.Mileage = carDto.Mileage;
+        car.Price = carDto.Price;
+        car.Features = carDto.Features;
+        car.Condition = carDto.Condition;
+        car.ImagePath = carDto.ImagePath;
+        car.UpdatedAt = DateTime.UtcNow;
     }
 }
