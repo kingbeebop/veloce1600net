@@ -75,6 +75,9 @@ public class Startup
             };
         });
 
+        // Add authorization services
+        services.AddAuthorization();
+
         // Register repositories and services
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<CarService>();
