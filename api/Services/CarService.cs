@@ -17,7 +17,7 @@ public class CarService
 
     public async Task<IEnumerable<CarDto>> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
     {
-        var cacheKey = GenerateCacheKey("cars", search, sort, page, pageSize);
+        var cacheKey = GenerateCacheKey("cars", search ?? string.Empty, sort ?? string.Empty, page.ToString(), pageSize.ToString());
         var cachedCars = await GetFromCacheAsync<IEnumerable<CarDto>>(cacheKey);
 
         if (cachedCars != null)
