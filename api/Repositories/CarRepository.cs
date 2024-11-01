@@ -23,7 +23,7 @@ public class CarRepository : ICarRepository
                 (car.Make + " " + car.Model).Contains(search));
         }
 
-        // Sorting logic (example: sort by Price or Year)
+        // Sorting logic
         if (sort == "price")
         {
             query = query.OrderBy(car => car.Price);
