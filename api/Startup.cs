@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis; // Add this line
 using System.Text;
 using System.Threading.Tasks;
 
@@ -73,6 +74,11 @@ public class Startup
             };
         });
 
+        // Register repositories
+        services.AddScoped<ICarRepository, CarRepository>();
+        // Register services
+        services.AddScoped<CarService>();
+
         // Swagger configuration
         services.AddSwaggerGen(c =>
         {
@@ -87,6 +93,9 @@ public class Startup
         services.AddSingleton<ITokenRepository, TokenRepository>();
         services.AddScoped<FileUploadService>();
         services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
+
+        // Redis configuration
+        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -125,7 +134,7 @@ public class Startup
             endpoints.MapControllers(); 
         });
 
-        // // Apply migrations automatically and seed data
+        // Uncomment if you want to apply migrations automatically and seed data
         // using (var scope = app.ApplicationServices.CreateScope())
         // {
         //     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();

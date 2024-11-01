@@ -1,3 +1,5 @@
+version: '3.8'  # Specify the version of Docker Compose
+
 services:
   backend:
     image: veloce-backend
@@ -9,8 +11,10 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=velocenetdb;Username=velocenetdb;Password=negator77;
+      - Redis__Configuration=redis:6379  # Add Redis connection string
     depends_on:
       - postgres
+      - redis  # Ensure Redis is started before the backend
     networks:
       - app-network
 
@@ -52,6 +56,14 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "6379:6379"  # Expose Redis port
     networks:
       - app-network
 
