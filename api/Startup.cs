@@ -21,12 +21,42 @@ public class Startup
 
     public IConfiguration Configuration { get; }
 
-    public async Task ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services)
     {
         // Load environment variables if needed
         DotNetEnv.Env.Load();
 
-        // CORS policy configuration
+        // Configure CORS policy
+        ConfigureCors(services);
+
+        // Set up database context
+        ConfigureDatabase(services);
+
+        // Configure Identity
+        ConfigureIdentity(services);
+
+        // Configure authentication
+        ConfigureAuthentication(services);
+
+        // Add authorization services
+        services.AddAuthorization();
+
+        // Register application services and repositories
+        ConfigureServicesAndRepositories(services);
+
+        // Configure Redis
+        ConfigureRedis(services);
+
+        // Set up Swagger for API documentation
+        ConfigureSwagger(services);
+
+        // Add controllers with JSON serialization
+        services.AddControllers()
+                .AddNewtonsoftJson();
+    }
+
+    private void ConfigureCors(IServiceCollection services)
+    {
         services.AddCors(options =>
         {
             options.AddPolicy("AllowAllOrigins", builder =>
@@ -36,17 +66,23 @@ public class Startup
                        .AllowAnyHeader();
             });
         });
+    }
 
-        // Database context setup
+    private void ConfigureDatabase(IServiceCollection services)
+    {
         services.AddDbContext<ApplicationDbContext>(options =>
             options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection")));
+    }
 
-        // Identity setup
+    private void ConfigureIdentity(IServiceCollection services)
+    {
         services.AddIdentity<User, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+    }
 
-        // Authentication configuration
+    private void ConfigureAuthentication(IServiceCollection services)
+    {
         services.AddAuthentication(options =>
         {
             options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -74,35 +110,34 @@ public class Startup
                 }
             };
         });
+    }
 
-        // Add authorization services
-        services.AddAuthorization();
-
-        // Register repositories and services
+    private void ConfigureServicesAndRepositories(IServiceCollection services)
+    {
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<CarService>();
         services.AddSingleton<ITokenRepository, TokenRepository>();
         services.AddScoped<FileUploadService>();
-        services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
+        services.AddScoped<DatabaseInitializer>();
         services.AddScoped<IRedisService, RedisService>();
+    }
 
-        // Redis configuration using the factory
+    private void ConfigureRedis(IServiceCollection services)
+    {
         services.AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
         services.AddSingleton<IConnectionMultiplexer>(provider =>
         {
             var factory = provider.GetRequiredService<IRedisConnectionFactory>();
             return factory.GetConnectionAsync().GetAwaiter().GetResult(); // Ensure it returns the connection synchronously
         });
+    }
 
-        // Swagger configuration
+    private void ConfigureSwagger(IServiceCollection services)
+    {
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Car API", Version = "v1" });
         });
-
-        // Controllers with JSON serialization
-        services.AddControllers()
-                .AddNewtonsoftJson();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -121,13 +156,12 @@ public class Startup
         // Middleware pipeline
         app.UseHttpsRedirection();
         app.UseRouting();
-
         app.UseCors("AllowAllOrigins");
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseStaticFiles();
 
-        // Swagger UI
+        // Swagger UI setup
         app.UseSwagger();
         app.UseSwaggerUI(c =>
         {
@@ -141,14 +175,20 @@ public class Startup
         });
 
         // Uncomment if you want to apply migrations automatically and seed data
-        // using (var scope = app.ApplicationServices.CreateScope())
-        // {
-        //     var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        //     dbContext.Database.Migrate(); // Apply any pending migrations
-            
-        //     // Seed data after migrations
-        //     var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
-        //     dbInitializer.SeedDataAsync().GetAwaiter().GetResult();
-        // }
+        // ApplyMigrations(app);
     }
+
+    // Optional: Refactor the migration and seeding logic into a method
+    // private void ApplyMigrations(IApplicationBuilder app)
+    // {
+    //     using (var scope = app.ApplicationServices.CreateScope())
+    //     {
+    //         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    //         dbContext.Database.Migrate(); // Apply any pending migrations
+            
+    //         // Seed data after migrations
+    //         var dbInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    //         dbInitializer.SeedDataAsync().GetAwaiter().GetResult();
+    //     }
+    // }
 }
