@@ -3,16 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 public class CarService
 {
     private readonly ICarRepository _carRepository;
     private readonly IRedisService _redisService;
+    private readonly ILogger<CarService> _logger;
 
-    public CarService(ICarRepository carRepository, IRedisService redisService)
+    public CarService(ICarRepository carRepository, IRedisService redisService, ILogger<CarService> logger)
     {
         _carRepository = carRepository;
         _redisService = redisService;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<CarDto>> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
@@ -22,13 +25,25 @@ public class CarService
 
         if (cachedCars != null)
         {
+            _logger.LogInformation($"Cache hit for key: {cacheKey}");
             return cachedCars;
         }
 
+        _logger.LogInformation($"Cache miss for key: {cacheKey}. Fetching from database...");
         var cars = await _carRepository.GetCarsAsync(search, sort, page, pageSize);
         var carDtos = MapToCarDtos(cars);
 
-        await CacheResultAsync(cacheKey, carDtos);
+        // Only cache if there are results
+        if (carDtos.Any())
+        {
+            _logger.LogInformation($"Caching {carDtos.Count()} car(s) under key: {cacheKey}");
+            await CacheResultAsync(cacheKey, carDtos);
+        }
+        else
+        {
+            _logger.LogInformation($"No cars found for the search criteria. Not caching empty result for key: {cacheKey}");
+        }
+
         return carDtos;
     }
 
@@ -39,12 +54,15 @@ public class CarService
 
         if (cachedCar != null)
         {
+            _logger.LogInformation($"Cache hit for key: {cacheKey}");
             return cachedCar;
         }
 
+        _logger.LogInformation($"Cache miss for key: {cacheKey}. Fetching from database...");
         var car = await _carRepository.GetCarByIdAsync(id);
         if (car == null)
         {
+            _logger.LogWarning($"Car with ID {id} not found in database.");
             return null; // Handle not found case in the controller
         }
 
@@ -57,6 +75,7 @@ public class CarService
     {
         var car = MapToCar(carDto);
         await _carRepository.AddCarAsync(car);
+        _logger.LogInformation($"Car with ID {car.Id} added. Invalidating cache...");
         await InvalidateCacheAsync();
     }
 
@@ -65,17 +84,20 @@ public class CarService
         var existingCar = await _carRepository.GetCarByIdAsync(id);
         if (existingCar == null)
         {
+            _logger.LogError($"Car with ID {id} not found for update.");
             throw new KeyNotFoundException($"Car with ID {id} not found.");
         }
 
         UpdateCarFromDto(existingCar, carDto);
         await _carRepository.UpdateCarAsync(existingCar);
+        _logger.LogInformation($"Car with ID {id} updated. Invalidating cache...");
         await InvalidateCacheAsync(id);
     }
 
     public async Task DeleteCarAsync(int id)
     {
         await _carRepository.DeleteCarAsync(id);
+        _logger.LogInformation($"Car with ID {id} deleted. Invalidating cache...");
         await InvalidateCacheAsync(id);
     }
 
@@ -88,7 +110,7 @@ public class CarService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Redis error while fetching {cacheKey}: {ex.Message}");
+            _logger.LogError($"Redis error while fetching {cacheKey}: {ex.Message}");
             return default;
         }
     }
@@ -101,7 +123,7 @@ public class CarService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Redis error while caching {cacheKey}: {ex.Message}");
+            _logger.LogError($"Redis error while caching {cacheKey}: {ex.Message}");
         }
     }
 
@@ -110,6 +132,7 @@ public class CarService
         if (id.HasValue)
         {
             await _redisService.SetStringAsync(GenerateCacheKey("car", id.Value.ToString()), null);
+            _logger.LogInformation($"Cache invalidated for key: {GenerateCacheKey("car", id.Value.ToString())}");
         }
         // Optionally clear all car caches, if desired
         // await _redisService.KeyDeleteAsync("cars:*"); // Uncomment if needed
