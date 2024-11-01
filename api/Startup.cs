@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using StackExchange.Redis; // Add this line
+using StackExchange.Redis;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -94,8 +94,13 @@ public class Startup
         services.AddScoped<FileUploadService>();
         services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
 
-        // Redis configuration
-        services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
+        // Redis Service
+        services.AddScoped<IRedisService, RedisService>();
+
+        // Redis configuration using the factory
+        services.AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
+        services.AddSingleton<IConnectionMultiplexer>(provider => 
+            provider.GetRequiredService<IRedisConnectionFactory>().GetConnection());
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

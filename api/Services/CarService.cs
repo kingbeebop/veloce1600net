@@ -1,4 +1,4 @@
-using StackExchange.Redis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -7,22 +7,21 @@ using System.Threading.Tasks;
 public class CarService
 {
     private readonly ICarRepository _carRepository;
-    private readonly IConnectionMultiplexer _redis;
+    private readonly IRedisService _redisService; // Inject the Redis service
 
-    public CarService(ICarRepository carRepository, IConnectionMultiplexer redis)
+    public CarService(ICarRepository carRepository, IRedisService redisService)
     {
         _carRepository = carRepository;
-        _redis = redis;
+        _redisService = redisService;
     }
 
     public async Task<IEnumerable<CarDto>> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
     {
-        var db = _redis.GetDatabase();
         var cacheKey = $"cars:{search}:{sort}:{page}:{pageSize}";
 
         // Check Redis cache first
-        var cachedCars = await db.StringGetAsync(cacheKey);
-        if (cachedCars.HasValue)
+        var cachedCars = await _redisService.GetStringAsync(cacheKey);
+        if (cachedCars != null)
         {
             return JsonSerializer.Deserialize<IEnumerable<CarDto>>(cachedCars);
         }
@@ -46,19 +45,18 @@ public class CarService
         }).ToList();
 
         // Cache the result in Redis
-        await db.StringSetAsync(cacheKey, JsonSerializer.Serialize(carDtos), TimeSpan.FromMinutes(5));
+        await _redisService.SetStringAsync(cacheKey, JsonSerializer.Serialize(carDtos), TimeSpan.FromMinutes(5));
 
         return carDtos;
     }
 
     public async Task<CarDto> GetCarByIdAsync(int id)
     {
-        var db = _redis.GetDatabase();
         var cacheKey = $"car:{id}";
 
         // Check Redis cache first
-        var cachedCar = await db.StringGetAsync(cacheKey);
-        if (cachedCar.HasValue)
+        var cachedCar = await _redisService.GetStringAsync(cacheKey);
+        if (cachedCar != null)
         {
             return JsonSerializer.Deserialize<CarDto>(cachedCar);
         }
@@ -86,7 +84,7 @@ public class CarService
         };
 
         // Cache the result in Redis
-        await db.StringSetAsync(cacheKey, JsonSerializer.Serialize(carDto), TimeSpan.FromMinutes(5));
+        await _redisService.SetStringAsync(cacheKey, JsonSerializer.Serialize(carDto), TimeSpan.FromMinutes(5));
 
         return carDto;
     }
@@ -112,7 +110,7 @@ public class CarService
         // Add to the repository
         await _carRepository.AddCarAsync(car);
 
-        // Optionally invalidate the cache
+        // Invalidate the cache
         await InvalidateCacheAsync();
     }
 
@@ -141,8 +139,7 @@ public class CarService
         await _carRepository.UpdateCarAsync(existingCar);
 
         // Invalidate the cache for the specific car
-        var db = _redis.GetDatabase();
-        await db.KeyDeleteAsync($"car:{id}");
+        await _redisService.SetStringAsync($"car:{id}", null); // Remove from cache
         await InvalidateCacheAsync();
     }
 
@@ -152,17 +149,15 @@ public class CarService
         await _carRepository.DeleteCarAsync(id);
 
         // Invalidate the cache for the specific car
-        var db = _redis.GetDatabase();
-        await db.KeyDeleteAsync($"car:{id}");
+        await _redisService.SetStringAsync($"car:{id}", null); // Remove from cache
         await InvalidateCacheAsync();
     }
 
     private async Task InvalidateCacheAsync()
     {
         // Optionally delete all cached car data
-        var db = _redis.GetDatabase();
         // This is a basic way to remove all car-related cached items.
         // Be cautious with this approach; it can impact performance.
-        // await db.KeyDeleteAsync("cars:*"); // Uncomment if you implement a better cache strategy
+        // await _redisService.KeyDeleteAsync("cars:*"); // Uncomment if you implement a better cache strategy
     }
 }
