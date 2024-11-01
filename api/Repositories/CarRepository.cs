@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 public class CarRepository : ICarRepository
@@ -11,9 +12,32 @@ public class CarRepository : ICarRepository
         _context = context;
     }
 
-    public async Task<IEnumerable<Car>> GetCarsAsync(/* parameters */)
+    public async Task<IEnumerable<Car>> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
     {
-        // Implementation with query filtering, sorting, and pagination
+        IQueryable<Car> query = _context.Cars.AsQueryable();
+
+        // Search filtering
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(car => 
+                (car.Make + " " + car.Model).Contains(search));
+        }
+
+        // Sorting logic (example: sort by Price or Year)
+        if (sort == "price")
+        {
+            query = query.OrderBy(car => car.Price);
+        }
+        else if (sort == "year")
+        {
+            query = query.OrderBy(car => car.Year);
+        }
+
+        // Pagination
+        return await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
     }
 
     public async Task<Car> GetCarByIdAsync(int id)

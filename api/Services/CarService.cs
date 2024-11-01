@@ -43,7 +43,7 @@ public class CarService
             Features = car.Features,
             Condition = car.Condition,
             ImagePath = car.ImagePath
-        });
+        }).ToList();
 
         // Cache the result in Redis
         await db.StringSetAsync(cacheKey, JsonSerializer.Serialize(carDtos), TimeSpan.FromMinutes(5));
@@ -67,7 +67,7 @@ public class CarService
         var car = await _carRepository.GetCarByIdAsync(id);
         if (car == null)
         {
-            return null; // Handle not found case in controller
+            return null; // Handle not found case in the controller
         }
 
         // Convert to CarDto
@@ -112,7 +112,7 @@ public class CarService
         // Add to the repository
         await _carRepository.AddCarAsync(car);
 
-        // Optionally invalidate the cache (or leave it to expire naturally)
+        // Optionally invalidate the cache
         await InvalidateCacheAsync();
     }
 
@@ -161,8 +161,8 @@ public class CarService
     {
         // Optionally delete all cached car data
         var db = _redis.GetDatabase();
-        // You can implement a key pattern matching or a better cache strategy if needed.
         // This is a basic way to remove all car-related cached items.
-        // E.g., await db.KeyDeleteAsync("cars:*"); // Be careful with this!
+        // Be cautious with this approach; it can impact performance.
+        // await db.KeyDeleteAsync("cars:*"); // Uncomment if you implement a better cache strategy
     }
 }
