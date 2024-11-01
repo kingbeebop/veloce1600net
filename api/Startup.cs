@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
+using System;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,10 +21,10 @@ public class Startup
 
     public IConfiguration Configuration { get; }
 
-    public void ConfigureServices(IServiceCollection services)
+    public async Task ConfigureServices(IServiceCollection services)
     {
         // Load environment variables if needed
-        DotNetEnv.Env.Load(); 
+        DotNetEnv.Env.Load();
 
         // CORS policy configuration
         services.AddCors(options =>
@@ -74,10 +75,21 @@ public class Startup
             };
         });
 
-        // Register repositories
+        // Register repositories and services
         services.AddScoped<ICarRepository, CarRepository>();
-        // Register services
         services.AddScoped<CarService>();
+        services.AddSingleton<ITokenRepository, TokenRepository>();
+        services.AddScoped<FileUploadService>();
+        services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
+        services.AddScoped<IRedisService, RedisService>();
+
+        // Redis configuration using the factory
+        services.AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
+        services.AddSingleton<IConnectionMultiplexer>(provider =>
+        {
+            var factory = provider.GetRequiredService<IRedisConnectionFactory>();
+            return factory.GetConnectionAsync().GetAwaiter().GetResult(); // Ensure it returns the connection synchronously
+        });
 
         // Swagger configuration
         services.AddSwaggerGen(c =>
@@ -88,19 +100,6 @@ public class Startup
         // Controllers with JSON serialization
         services.AddControllers()
                 .AddNewtonsoftJson();
-
-        // Dependency Injection for services
-        services.AddSingleton<ITokenRepository, TokenRepository>();
-        services.AddScoped<FileUploadService>();
-        services.AddScoped<DatabaseInitializer>(); // Register DatabaseInitializer
-
-        // Redis Service
-        services.AddScoped<IRedisService, RedisService>();
-
-        // Redis configuration using the factory
-        services.AddSingleton<IRedisConnectionFactory, RedisConnectionFactory>();
-        services.AddSingleton<IConnectionMultiplexer>(provider => 
-            provider.GetRequiredService<IRedisConnectionFactory>().GetConnectionAsync());
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -119,11 +118,10 @@ public class Startup
         // Middleware pipeline
         app.UseHttpsRedirection();
         app.UseRouting();
-        
+
         app.UseCors("AllowAllOrigins");
         app.UseAuthentication();
         app.UseAuthorization();
-
         app.UseStaticFiles();
 
         // Swagger UI
