@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 [Route("api/[controller]")]
@@ -17,11 +16,11 @@ public class CarsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<CarDto>>> GetCars(/* parameters */)
+    public async Task<ActionResult<CarApiResponse>> GetCars(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
     {
         try
         {
-            var cars = await _carService.GetCarsAsync(/* parameters */);
+            var cars = await _carService.GetCarsAsync(search, sort, page, pageSize);
             return Ok(cars);
         }
         catch (Exception ex)

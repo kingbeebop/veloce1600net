@@ -18,33 +18,34 @@ public class CarService
         _logger = logger;
     }
 
-    public async Task<IEnumerable<CarDto>> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
+    public async Task<CarApiResponse> GetCarsAsync(string? search = null, string? sort = null, int page = 1, int pageSize = 10)
     {
         var cacheKey = GenerateCacheKey("cars", search ?? string.Empty, sort ?? string.Empty, page.ToString(), pageSize.ToString());
-        var cachedCars = await GetFromCacheAsync<IEnumerable<CarDto>>(cacheKey);
+        var cachedResponse = await GetFromCacheAsync<CarApiResponse>(cacheKey);
 
-        if (cachedCars != null)
+        if (cachedResponse != null)
         {
             _logger.LogInformation($"Cache hit for key: {cacheKey}");
-            return cachedCars;
+            return cachedResponse;
         }
 
         _logger.LogInformation($"Cache miss for key: {cacheKey}. Fetching from database...");
+        var totalCars = await _carRepository.GetCarCountAsync(search);
         var cars = await _carRepository.GetCarsAsync(search, sort, page, pageSize);
         var carDtos = MapToCarDtos(cars);
 
-        // Only cache if there are results
-        if (carDtos.Any())
+        var response = new CarApiResponse
         {
-            _logger.LogInformation($"Caching {carDtos.Count()} car(s) under key: {cacheKey}");
-            await CacheResultAsync(cacheKey, carDtos);
-        }
-        else
-        {
-            _logger.LogInformation($"No cars found for the search criteria. Not caching empty result for key: {cacheKey}");
-        }
+            Count = totalCars,
+            CurrentPage = page,
+            Results = carDtos.ToList(),
+            Next = (page * pageSize < totalCars) ? page + 1 : (int?)null,
+            Previous = (page > 1) ? page - 1 : (int?)null
+        };
 
-        return carDtos;
+        // Cache the result
+        await CacheResultAsync(cacheKey, response);
+        return response;
     }
 
     public async Task<CarDto> GetCarByIdAsync(int id)
@@ -134,7 +135,7 @@ public class CarService
             await _redisService.SetStringAsync(GenerateCacheKey("car", id.Value.ToString()), null);
             _logger.LogInformation($"Cache invalidated for key: {GenerateCacheKey("car", id.Value.ToString())}");
         }
-        // Optionally clear all car caches, if desired
+        // Optionally clear all car caches if desired
         // await _redisService.KeyDeleteAsync("cars:*"); // Uncomment if needed
     }
 
