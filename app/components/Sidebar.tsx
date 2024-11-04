@@ -9,7 +9,7 @@ import { fetchCars, filterCars } from '../redux/slices/carSlice';
 import { Car } from '../types/car'; 
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import { toggleSidebar, selectIsSidebarOpen } from '../redux/slices/appSlice'; // Import sidebar actions and selector
+import { toggleSidebar, selectIsSidebarOpen } from '../redux/slices/appSlice';
 
 const Sidebar: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -20,8 +20,7 @@ const Sidebar: React.FC = () => {
     const filterState = useSelector((state: RootState) => state.filters);
     
     const [searchTerm, setSearchTerm] = useState<string>('');
-    
-    // Access the sidebar open state from the app slice
+
     const isSidebarOpen = useSelector(selectIsSidebarOpen); 
 
     useEffect(() => {
@@ -34,9 +33,7 @@ const Sidebar: React.FC = () => {
                 await dispatch(fetchCars({}));
             }
         };
-
         fetchInitialCars();
-        console.log("All cars: ", allCars)
     }, [dispatch, allCars]);
 
     useEffect(() => {
@@ -47,6 +44,10 @@ const Sidebar: React.FC = () => {
         dispatch(filterCars({ filters: filterState }));
     }, [filterState, dispatch]);
 
+    useEffect(() => {
+        console.log('All cars updated:', allCars);
+    }, [allCars]);
+
     const handleCarClick = (carId: number) => {
         router.push(`/cars/${carId}`);
     };
@@ -56,31 +57,28 @@ const Sidebar: React.FC = () => {
         setSearchTerm('');
     };
 
-    // Toggle sidebar visibility using Redux action
     const toggleSidebarVisibility = () => {
         dispatch(toggleSidebar());
     };
 
     return (
         <>
-            {/* Sidebar */}
             <Box
                 sx={{
                     width: 250,
                     padding: 2,
                     borderRight: '1px solid rgba(255, 255, 255, 0.12)',
-                    backgroundColor: '#121212', // Dark background
-                    color: 'white', // White text color
+                    backgroundColor: '#121212',
+                    color: 'white',
                     height: '100vh',
                     position: 'fixed',
                     top: 0,
-                    left: isSidebarOpen ? 0 : '-230px', // Use Redux state for position
+                    left: isSidebarOpen ? 0 : '-230px',
                     transition: 'left 0.3s ease-in-out',
                     zIndex: 1000,
                     boxShadow: '2px 0 5px rgba(0, 0, 0, 0.3)',
                 }}
             >
-                {/* Sidebar content */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                     <IconButton onClick={toggleSidebarVisibility} sx={{ padding: '5px' }}>
                         {isSidebarOpen ? <ArrowBackIosNewIcon sx={{ color: 'white' }} /> : <ArrowForwardIosIcon sx={{ color: 'white' }} />}
@@ -93,7 +91,7 @@ const Sidebar: React.FC = () => {
                     placeholder="Search cars..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    sx={{ mb: 2, '& .MuiInputBase-root': { backgroundColor: '#333', color: 'white' }, '& .MuiInputLabel-root': { color: 'white' } }} // Input field style
+                    sx={{ mb: 2, '& .MuiInputBase-root': { backgroundColor: '#333', color: 'white' }, '& .MuiInputLabel-root': { color: 'white' } }}
                 />
 
                 {isLoading ? (
@@ -101,15 +99,21 @@ const Sidebar: React.FC = () => {
                         <CircularProgress />
                     </Box>
                 ) : (
-                    <List>
-                        {cars.map((car: Car) => (
-                            <ListItem key={car.id} disablePadding>
-                                <ListItemButton onClick={() => handleCarClick(car.id)}>
-                                    <ListItemText primary={`${car.make} ${car.model}`} sx={{ color: 'white' }} /> {/* White text for car names */}
-                                </ListItemButton>
-                            </ListItem>
-                        ))}
-                    </List>
+                    cars.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', color: 'white', mt: 2 }}>
+                            No cars found.
+                        </Box>
+                    ) : (
+                        <List>
+                            {cars.map((car: Car) => (
+                                <ListItem key={car.id} disablePadding>
+                                    <ListItemButton onClick={() => handleCarClick(car.id)}>
+                                        <ListItemText primary={`${car.make} ${car.model}`} sx={{ color: 'white' }} />
+                                    </ListItemButton>
+                                </ListItem>
+                            ))}
+                        </List>
+                    )
                 )}
 
                 <Box sx={{ mt: 2 }}>
@@ -119,7 +123,6 @@ const Sidebar: React.FC = () => {
                 </Box>
             </Box>
 
-            {/* Tab when Sidebar is closed */}
             {!isSidebarOpen && (
                 <Box
                     sx={{
@@ -129,7 +132,7 @@ const Sidebar: React.FC = () => {
                         transform: 'translateY(-50%)',
                         width: '30px',
                         height: '100px',
-                        backgroundColor: '#121212', // Dark background
+                        backgroundColor: '#121212',
                         borderTopRightRadius: '5px',
                         borderBottomRightRadius: '5px',
                         display: 'flex',
@@ -139,7 +142,7 @@ const Sidebar: React.FC = () => {
                         cursor: 'pointer',
                         zIndex: 1100,
                     }}
-                    onClick={toggleSidebarVisibility} // Toggle via Redux action
+                    onClick={toggleSidebarVisibility}
                 >
                     <ArrowForwardIosIcon sx={{ color: 'white' }} />
                 </Box>
