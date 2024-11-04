@@ -36,6 +36,7 @@ const Sidebar: React.FC = () => {
         };
 
         fetchInitialCars();
+        console.log("All cars: ", allCars)
     }, [dispatch, allCars]);
 
     useEffect(() => {
