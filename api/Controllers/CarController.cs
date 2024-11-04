@@ -59,8 +59,15 @@ public class CarsController : ControllerBase
             // Handle image upload if provided
             if (imageFile != null)
             {
-                var imageUrl = await _fileUploadService.UploadFileAsync(imageFile);
-                car.ImagePath = imageUrl; // Set the ImagePath property on the Car model
+                var (imagePath, message) = await _fileUploadService.UploadFileAsync(imageFile);
+                if (imagePath != null)
+                {
+                    car.ImagePath = imagePath; // Set the ImagePath property on the Car model
+                }
+                else
+                {
+                    _logger.LogWarning(message); // Log the warning message
+                }
             }
 
             await _carService.AddCarAsync(car);
@@ -83,8 +90,15 @@ public class CarsController : ControllerBase
             // Handle image upload if a new file is provided
             if (imageFile != null)
             {
-                var imageUrl = await _fileUploadService.UploadFileAsync(imageFile);
-                car.ImagePath = imageUrl; // Update the ImagePath
+                var (imagePath, message) = await _fileUploadService.UploadFileAsync(imageFile);
+                if (imagePath != null)
+                {
+                    car.ImagePath = imagePath; // Update the ImagePath
+                }
+                else
+                {
+                    _logger.LogWarning(message); // Log the warning message
+                }
             }
 
             await _carService.UpdateCarAsync(id, car);
@@ -112,6 +126,7 @@ public class CarsController : ControllerBase
         }
     }
 }
+
 
 // using Microsoft.AspNetCore.Mvc;
 // using Microsoft.EntityFrameworkCore;
