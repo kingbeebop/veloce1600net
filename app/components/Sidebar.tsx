@@ -8,7 +8,7 @@ import {
      TextField, Box, Button,
     //  CircularProgress,
      IconButton } from '@mui/material';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import { autoLogin } from '../redux/slices/authSlice';
 import { updateFilters, resetFilters } from '../redux/slices/filterSlice';
 import { fetchCars, filterCars } from '../redux/slices/carSlice'; 
