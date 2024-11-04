@@ -59,9 +59,9 @@ const Sidebar: React.FC = () => {
         console.log('All cars updated:', allCars);
     }, [allCars]);
 
-    const handleCarClick = (carId: number) => {
-        router.push(`/cars/${carId}`);
-    };
+    // const handleCarClick = (carId: number) => {
+    //     router.push(`/cars/${carId}`);
+    // };
 
     const handleClearFilters = () => {
         dispatch(resetFilters());
