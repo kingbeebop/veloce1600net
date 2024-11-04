@@ -3,12 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
-import { List, ListItem, ListItemButton, ListItemText, TextField, Box, Button, CircularProgress, IconButton } from '@mui/material';
+import { 
+    // List, ListItem, ListItemButton, ListItemText,
+     TextField, Box, Button,
+    //  CircularProgress,
+     IconButton } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { autoLogin } from '../redux/slices/authSlice';
 import { updateFilters, resetFilters } from '../redux/slices/filterSlice';
 import { fetchCars, filterCars } from '../redux/slices/carSlice'; 
-import { Car } from '../types/car'; 
+// import { Car } from '../types/car'; 
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { toggleSidebar, selectIsSidebarOpen } from '../redux/slices/appSlice';
@@ -28,6 +32,11 @@ const Sidebar: React.FC = () => {
     useEffect(() => {
         dispatch(autoLogin());
     }, [dispatch]);
+
+    useEffect(() => {
+        console.log("loading: ", isLoading)
+        console.log("cars: ", cars)
+    }, [cars, isLoading])
 
     useEffect(() => {
         const fetchInitialCars = async () => {
