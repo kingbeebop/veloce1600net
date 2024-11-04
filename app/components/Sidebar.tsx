@@ -19,7 +19,7 @@ import { toggleSidebar, selectIsSidebarOpen } from '../redux/slices/appSlice';
 
 const Sidebar: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    const router = useRouter();
+    // const router = useRouter();
     const cars = useSelector((state: RootState) => state.cars.cars);
     const allCars = useSelector((state: RootState) => state.cars.allCars);
     const isLoading = useSelector((state: RootState) => state.cars.loading); 
