@@ -48,7 +48,9 @@ const initialState: CarState = {
 export const fetchCars = createAsyncThunk<CarApiResponse, { page?: number; pageSize?: number }>(
     'cars/fetchCars',
     async ({ page = 1, pageSize = 20 } = {}) => {
-        return await apiFetchCars(page, pageSize);
+        const response = await apiFetchCars(page, pageSize);
+        console.log('Fetched cars response:', response); // Log the response
+        return response;
     }
 );
 
