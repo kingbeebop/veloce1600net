@@ -33,14 +33,11 @@ public class CarService
         var totalCars = await _carRepository.GetCarCountAsync(search);
         var cars = await _carRepository.GetCarsAsync(search, sort, page, pageSize);
 
-        // Map the cars to DTOs
-        var carDtos = cars.Select(MapToCarDto).ToList();
-
         var response = new CarApiResponse
         {
             Count = totalCars,
             CurrentPage = page,
-            Results = carDtos,
+            Results = cars.ToList(), // Directly using the Car list
             Next = (page * pageSize < totalCars) ? page + 1 : (int?)null,
             Previous = (page > 1) ? page - 1 : (int?)null
         };
@@ -50,10 +47,10 @@ public class CarService
         return response;
     }
 
-    public async Task<CarDto?> GetCarByIdAsync(int id)
+    public async Task<Car?> GetCarByIdAsync(int id)
     {
         var cacheKey = GenerateCacheKey("car", id.ToString());
-        var cachedCar = await GetFromCacheAsync<CarDto>(cacheKey);
+        var cachedCar = await GetFromCacheAsync<Car>(cacheKey);
 
         if (cachedCar != null)
         {
@@ -69,20 +66,18 @@ public class CarService
             return null; // Handle not found case in the controller
         }
 
-        var carDto = MapToCarDto(car);
-        await CacheResultAsync(cacheKey, carDto);
-        return carDto;
+        await CacheResultAsync(cacheKey, car);
+        return car;
     }
 
-    public async Task AddCarAsync(CarDto carDto)
+    public async Task AddCarAsync(Car car)
     {
-        var car = MapToCar(carDto);
         await _carRepository.AddCarAsync(car);
         _logger.LogInformation($"Car with ID {car.Id} added. Invalidating cache...");
         await InvalidateCacheAsync();
     }
 
-    public async Task UpdateCarAsync(int id, CarDto carDto)
+    public async Task UpdateCarAsync(int id, Car car)
     {
         var existingCar = await _carRepository.GetCarByIdAsync(id);
         if (existingCar == null)
@@ -91,7 +86,7 @@ public class CarService
             throw new KeyNotFoundException($"Car with ID {id} not found.");
         }
 
-        UpdateCarFromDto(existingCar, carDto);
+        UpdateCarFromDto(existingCar, car);
         await _carRepository.UpdateCarAsync(existingCar);
         _logger.LogInformation($"Car with ID {id} updated. Invalidating cache...");
         await InvalidateCacheAsync(id);
@@ -146,56 +141,17 @@ public class CarService
         return string.Join(":", parts);
     }
 
-    private CarDto MapToCarDto(Car car)
+    private void UpdateCarFromDto(Car car, Car updatedCar)
     {
-        return new CarDto
-        {
-            Id = car.Id,
-            Make = car.Make,
-            Model = car.Model,
-            Year = car.Year,
-            Vin = car.Vin,
-            Mileage = car.Mileage,
-            Price = car.Price,
-            Features = car.Features,
-            Condition = car.Condition,
-            ImagePath = car.ImagePath,
-            OwnerId = car.OwnerId,
-            CreatedAt = car.CreatedAt,
-            UpdatedAt = car.UpdatedAt
-        };
-    }
-
-    private Car MapToCar(CarDto carDto)
-    {
-        return new Car
-        {
-            Id = carDto.Id, // Assuming Id is set for updates
-            Make = carDto.Make ?? throw new ArgumentNullException(nameof(carDto.Make)),
-            Model = carDto.Model ?? throw new ArgumentNullException(nameof(carDto.Model)),
-            Year = carDto.Year ?? throw new ArgumentNullException(nameof(carDto.Year)),
-            Vin = carDto.Vin ?? throw new ArgumentNullException(nameof(carDto.Vin)),
-            Mileage = carDto.Mileage ?? throw new ArgumentNullException(nameof(carDto.Mileage)),
-            Price = carDto.Price ?? throw new ArgumentNullException(nameof(carDto.Price)),
-            Features = carDto.Features,
-            Condition = carDto.Condition,
-            ImagePath = carDto.ImagePath,
-            CreatedAt = DateTime.UtcNow, // Set on creation
-            UpdatedAt = DateTime.UtcNow
-        };
-    }
-
-    private void UpdateCarFromDto(Car car, CarDto carDto)
-    {
-        car.Make = carDto.Make ?? car.Make; // Only update if provided
-        car.Model = carDto.Model ?? car.Model;
-        car.Year = carDto.Year ?? car.Year;
-        car.Vin = carDto.Vin ?? car.Vin;
-        car.Mileage = carDto.Mileage ?? car.Mileage;
-        car.Price = carDto.Price ?? car.Price;
-        car.Features = carDto.Features ?? car.Features;
-        car.Condition = carDto.Condition ?? car.Condition;
-        car.ImagePath = carDto.ImagePath ?? car.ImagePath;
+        car.Make = updatedCar.Make ?? car.Make; // Only update if provided
+        car.Model = updatedCar.Model ?? car.Model;
+        car.Year = updatedCar.Year ?? car.Year;
+        car.Vin = updatedCar.Vin ?? car.Vin;
+        car.Mileage = updatedCar.Mileage ?? car.Mileage;
+        car.Price = updatedCar.Price ?? car.Price;
+        car.Features = updatedCar.Features ?? car.Features;
+        car.Condition = updatedCar.Condition ?? car.Condition;
+        car.ImagePath = updatedCar.ImagePath ?? car.ImagePath;
         car.UpdatedAt = DateTime.UtcNow;
     }
 }
