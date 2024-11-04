@@ -8,7 +8,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { Box } from '@mui/material';
 import store from '../redux/store'; 
 import Banner from '../components/Banner';
-import Sidebar from '../components/Sidebar';
+// import Sidebar from '../components/Sidebar';
 import theme from '../theme/theme';
 import { useRouter } from 'next/navigation';
 import LoginAvatar from '../components/LoginAvatar'; 
