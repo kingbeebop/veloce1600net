@@ -43,12 +43,11 @@ public class CarService
             Previous = (page > 1) ? page - 1 : (int?)null
         };
 
-        // Cache the result
         await CacheResultAsync(cacheKey, response);
         return response;
     }
 
-    public async Task<CarDto> GetCarByIdAsync(int id)
+    public async Task<CarDto?> GetCarByIdAsync(int id)
     {
         var cacheKey = GenerateCacheKey("car", id.ToString());
         var cachedCar = await GetFromCacheAsync<CarDto>(cacheKey);
@@ -64,7 +63,7 @@ public class CarService
         if (car == null)
         {
             _logger.LogWarning($"Car with ID {id} not found in database.");
-            return null; // Handle not found case in the controller
+            return null;
         }
 
         var carDto = MapToCarDto(car);
@@ -132,8 +131,9 @@ public class CarService
     {
         if (id.HasValue)
         {
-            await _redisService.SetStringAsync(GenerateCacheKey("car", id.Value.ToString()), null);
-            _logger.LogInformation($"Cache invalidated for key: {GenerateCacheKey("car", id.Value.ToString())}");
+            var carCacheKey = GenerateCacheKey("car", id.Value.ToString());
+            await _redisService.SetStringAsync(carCacheKey, null);
+            _logger.LogInformation($"Cache invalidated for key: {carCacheKey}");
         }
         // Optionally clear all car caches if desired
         // await _redisService.KeyDeleteAsync("cars:*"); // Uncomment if needed
@@ -146,7 +146,7 @@ public class CarService
 
     private IEnumerable<CarDto> MapToCarDtos(IEnumerable<Car> cars)
     {
-        return cars.Select(MapToCarDto).ToList();
+        return cars.Select(MapToCarDto);
     }
 
     private CarDto MapToCarDto(Car car)
