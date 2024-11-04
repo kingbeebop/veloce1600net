@@ -40,6 +40,20 @@ public class CarRepository : ICarRepository
             .ToListAsync();
     }
 
+    public async Task<int> GetCarCountAsync(string? search = null)
+    {
+        IQueryable<Car> query = _context.Cars.AsQueryable();
+
+        // Search filtering for count
+        if (!string.IsNullOrEmpty(search))
+        {
+            query = query.Where(car => 
+                (car.Make + " " + car.Model).Contains(search));
+        }
+
+        return await query.CountAsync();
+    }
+
     public async Task<Car> GetCarByIdAsync(int id)
     {
         return await _context.Cars.FindAsync(id);
