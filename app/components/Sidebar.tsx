@@ -96,7 +96,7 @@ const Sidebar: React.FC = () => {
                     sx={{ mb: 2, '& .MuiInputBase-root': { backgroundColor: '#333', color: 'white' }, '& .MuiInputLabel-root': { color: 'white' } }}
                 />
 
-                {isLoading ? (
+                {/* {isLoading ? (
                     <Box display="flex" justifyContent="center" alignItems="center" height="100%">
                         <CircularProgress />
                     </Box>
@@ -116,7 +116,7 @@ const Sidebar: React.FC = () => {
                             ))}
                         </List>
                     )
-                )}
+                )} */}
 
                 <Box sx={{ mt: 2 }}>
                     <Button variant="contained" color="secondary" onClick={handleClearFilters}>
