@@ -4,22 +4,27 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../redux/store';
 import { 
-    // List, ListItem, ListItemButton, ListItemText,
-     TextField, Box, Button,
-    //  CircularProgress,
-     IconButton } from '@mui/material';
-// import { useRouter } from 'next/navigation';
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    TextField,
+    Box,
+    Button,
+    CircularProgress,
+    IconButton } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import { autoLogin } from '../redux/slices/authSlice';
 import { updateFilters, resetFilters } from '../redux/slices/filterSlice';
 import { fetchCars, filterCars } from '../redux/slices/carSlice'; 
-// import { Car } from '../types/car'; 
+import { Car } from '../types/car'; 
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { toggleSidebar, selectIsSidebarOpen } from '../redux/slices/appSlice';
 
 const Sidebar: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
-    // const router = useRouter();
+    const router = useRouter();
     const cars = useSelector((state: RootState) => state.cars.cars);
     const allCars = useSelector((state: RootState) => state.cars.allCars);
     const isLoading = useSelector((state: RootState) => state.cars.loading); 
@@ -59,9 +64,9 @@ const Sidebar: React.FC = () => {
         console.log('All cars updated:', allCars);
     }, [allCars]);
 
-    // const handleCarClick = (carId: number) => {
-    //     router.push(`/cars/${carId}`);
-    // };
+    const handleCarClick = (carId: number) => {
+        router.push(`/cars/${carId}`);
+    };
 
     const handleClearFilters = () => {
         dispatch(resetFilters());
@@ -105,7 +110,7 @@ const Sidebar: React.FC = () => {
                     sx={{ mb: 2, '& .MuiInputBase-root': { backgroundColor: '#333', color: 'white' }, '& .MuiInputLabel-root': { color: 'white' } }}
                 />
 
-                {/* {isLoading ? (
+                {isLoading ? (
                     <Box display="flex" justifyContent="center" alignItems="center" height="100%">
                         <CircularProgress />
                     </Box>
@@ -125,7 +130,7 @@ const Sidebar: React.FC = () => {
                             ))}
                         </List>
                     )
-                )} */}
+                )}
 
                 <Box sx={{ mt: 2 }}>
                     <Button variant="contained" color="secondary" onClick={handleClearFilters}>
