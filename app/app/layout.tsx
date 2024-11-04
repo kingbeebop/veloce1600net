@@ -56,7 +56,7 @@ const RootLayout = ({ children }: { children: ReactNode }) => {
               <LoginAvatar />
               <Banner />
               <Box sx={{ position: 'relative' }}>
-                <Sidebar />
+                {/* <Sidebar /> */}
                 <Box
                   sx={{
                     margin: '0 auto',
