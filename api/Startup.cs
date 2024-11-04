@@ -117,7 +117,7 @@ public class Startup
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<CarService>();
         services.AddSingleton<ITokenRepository, TokenRepository>();
-        services.AddScoped<FileUploadService>();
+        services.AddScoped<IFileUploadService, FileUploadService>();
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<IRedisService, RedisService>();
     }
